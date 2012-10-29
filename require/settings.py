@@ -1,4 +1,6 @@
 from django.conf import settings
 
 
-REQUIRE_BUILD_PROFILE = getattr(settings, "REQUIRE_BUILD_PROFILE", "js/app.build.js")
+REQUIRE_BASE_URL = getattr(settings, "REQUIRE_BASE_URL", "js")
+
+REQUIRE_BUILD_PROFILE = getattr(settings, "REQUIRE_BUILD_PROFILE", "app.build.js")

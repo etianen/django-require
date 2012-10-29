@@ -4,7 +4,7 @@ from optparse import make_option
 from django.core.management.base import NoArgsCommand, CommandError
 from django.conf import settings
 
-from require.settings import REQUIRE_BUILD_PROFILE
+from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE
 
 
 class Command(NoArgsCommand):
@@ -33,8 +33,8 @@ class Command(NoArgsCommand):
         # Calculate paths.
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources"))
         resources = (
-            ("app.build.js", REQUIRE_BUILD_PROFILE),
-            ("require.js", os.path.join(os.path.dirname(REQUIRE_BUILD_PROFILE), "require.js")),
+            ("require.js", os.path.join(REQUIRE_BASE_URL, "require.js")),
+            ("app.build.js", os.path.join(REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE)),
         )
         # Check if the file exists.
         for resource_name, dst_name in resources:

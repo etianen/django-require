@@ -4,7 +4,7 @@ from functools import partial
 from django.core.files.base import File
 from django.contrib.staticfiles.storage import StaticFilesStorage
 
-from require.settings import REQUIRE_BUILD_PROFILE
+from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE
 
 
 class OptimizedMixin(object):
@@ -49,7 +49,7 @@ class OptimizedMixin(object):
                 # Store details of file.
                 compile_info[name] = hash.digest()
             # Run the optimizer.
-            app_build_js_path = os.path.join(compile_dir, REQUIRE_BUILD_PROFILE)
+            app_build_js_path = os.path.abspath(os.path.join(compile_dir, REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE))
             compiler_result = subprocess.call((
                 "java",
                 "-classpath",
@@ -58,6 +58,7 @@ class OptimizedMixin(object):
                 r_js_path,
                 "-o",
                 app_build_js_path,
+                "baseUrl={}".format(REQUIRE_BASE_URL),
                 "dir={}".format(build_dir),
                 "appDir={}".format(compile_dir),
             ))
@@ -65,7 +66,7 @@ class OptimizedMixin(object):
             exclude_patterns = [
                 re.compile(pattern)
                 for pattern
-                in self.EXCLUDE_PATTERNS + (re.escape(REQUIRE_BUILD_PROFILE),)
+                in self.EXCLUDE_PATTERNS + (re.escape(os.path.join(REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE)),)
             ]
             # Update assets with modified ones.
             if compiler_result == 0:
