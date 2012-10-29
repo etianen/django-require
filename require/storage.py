@@ -59,7 +59,8 @@ class OptimizedMixin(object):
                 r_js_path,
                 "-o",
                 app_build_js_path,
-                "dir={}".format(build_dir)
+                "dir={}".format(build_dir),
+                "appDir={}".format(compile_dir),
             ))
             # Compile the exclude patterns.
             exclude_patterns = [

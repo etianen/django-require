@@ -3,10 +3,10 @@
  * 
  * This supports all the normal configuration available to a r.js build profile. The only gotchas are:
  * 
- *   - The output 'dir' will be overidden by django-require during build. Just leave this setting out. 
+ *   - 'appDir' will be overidden by django-require during the build process.
+ *   - 'dir' will be overidden by django-require during the build process. 
  */
 ({
-    appDir: "../",
     baseUrl: "js",
     optimize: "closure",
     optimizeCss: "standard",
