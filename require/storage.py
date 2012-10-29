@@ -120,7 +120,7 @@ class OptimizedMixin(object):
             exclude_patterns = [
                 re.compile(pattern)
                 for pattern
-                in self.EXCLUDE_PATTERNS + (re.escape(os.path.join(REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE)),)
+                in self.EXCLUDE_PATTERNS + (re.escape(os.path.normpath(os.path.join(REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE))),)
             ]
             # Update assets with modified ones.
             if compiler_result == 0:
@@ -131,11 +131,12 @@ class OptimizedMixin(object):
                         # Determine asset name.
                         build_filepath = os.path.join(build_dirpath, build_filename)
                         build_name = build_filepath[len(build_comparison_dir)+1:]
+                        build_storage_name = build_name.replace(os.sep, "/")
                         # Ignore certain files.
                         if any(pattern.match(build_name) for pattern in exclude_patterns):
                             # Delete from storage, if originally present.
                             if build_name in compile_info:
-                                self.delete(build_name)
+                                self.delete(build_storage_name)
                             continue
                         # Update the asset.
                         with open(build_filepath, "rb") as build_handle:
@@ -150,8 +151,8 @@ class OptimizedMixin(object):
                                 if hash.digest() == compile_info[build_name]:
                                     continue
                             # If we're here, then the asset has been modified by the build script! Time to re-save it!
-                            self.delete(build_name)
-                            self.save(build_name, File(build_handle, build_name))
+                            self.delete(build_storage_name)
+                            self.save(build_storage_name, File(build_handle, build_storage_name))
                             # Report on the modified asset.
                             yield build_name, build_name, True
         finally:
