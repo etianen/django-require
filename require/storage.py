@@ -3,8 +3,9 @@ from functools import partial
 
 from django.core.files.base import File
 from django.contrib.staticfiles.storage import StaticFilesStorage
+from django.conf import settings
 
-from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE
+from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_APP_VERSION
 
 
 class OptimizedMixin(object):
@@ -17,6 +18,19 @@ class OptimizedMixin(object):
     
     def _file_iter(self, handle):
         return iter(partial(handle.read, self.COPY_BLOCK_SIZE), "")
+    
+    def _get_versioned_name(self, name):
+        if REQUIRE_APP_VERSION is not None:
+            name = "/".join((REQUIRE_APP_VERSION, name))
+        return name
+    
+    def path(self, name):
+        return super(OptimizedMixin, self).path(self._get_versioned_name(name))
+    
+    def url(self, name):
+        if not settings.DEBUG:
+            name = self._get_versioned_name(name)
+        return super(OptimizedMixin, self).url(name)
     
     def post_process(self, paths, dry_run=False, **options):
         # If this is a dry run, give up now!
@@ -36,7 +50,7 @@ class OptimizedMixin(object):
             for name, storage_details in paths.items():
                 storage, path = storage_details
                 src_path = storage.path(path)
-                dst_path = os.path.join(compile_dir, path)
+                dst_path = os.path.join(compile_dir, self._get_versioned_name(path))
                 dst_dir = os.path.dirname(dst_path)
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
@@ -49,7 +63,7 @@ class OptimizedMixin(object):
                 # Store details of file.
                 compile_info[name] = hash.digest()
             # Run the optimizer.
-            app_build_js_path = os.path.abspath(os.path.join(compile_dir, REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE))
+            app_build_js_path = os.path.abspath(os.path.join(compile_dir, self._get_versioned_name(os.path.join(REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE))))
             compiler_result = subprocess.call((
                 "java",
                 "-classpath",
@@ -58,7 +72,7 @@ class OptimizedMixin(object):
                 r_js_path,
                 "-o",
                 app_build_js_path,
-                "baseUrl={}".format(REQUIRE_BASE_URL),
+                "baseUrl={}".format(self._get_versioned_name(REQUIRE_BASE_URL)),
                 "dir={}".format(build_dir),
                 "appDir={}".format(compile_dir),
             ))
@@ -71,18 +85,19 @@ class OptimizedMixin(object):
             # Update assets with modified ones.
             if compiler_result == 0:
                 # Walk the compiled directory, checking for modified assets.
-                for build_dirpath, _, build_filenames in os.walk(build_dir):
+                build_comparison_dir = os.path.join(build_dir, self._get_versioned_name(""))[:-1]
+                for build_dirpath, _, build_filenames in os.walk(build_comparison_dir):
                     for build_filename in build_filenames:
                         # Determine asset name.
                         build_filepath = os.path.join(build_dirpath, build_filename)
-                        build_name = build_filepath[len(build_dir)+1:]
+                        build_name = build_filepath[len(build_comparison_dir)+1:]
                         # Ignore certain files.
                         if any(pattern.match(build_name) for pattern in exclude_patterns):
                             # Delete from storage, if originally present.
                             if build_name in compile_info:
                                 self.delete(build_name)
                             continue
-                        # Determine if asset should be updated.
+                        # Update the asset.
                         with open(build_filepath, "rb") as build_handle:
                             # Calculate asset hash.
                             hash = hashlib.md5()
