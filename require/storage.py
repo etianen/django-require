@@ -81,21 +81,23 @@ class OptimizedMixin(object):
                             if build_name in compile_info:
                                 self.delete(build_name)
                             continue
-                        # Check if the asset has been modifed.
-                        if build_name in compile_info:
-                            # Get the hash of the new file.
+                        # Determine if asset should be updated.
+                        with open(build_filepath, "rb") as build_handle:
+                            # Calculate asset hash.
                             hash = hashlib.sha1()
-                            with open(build_filepath, "rb") as build_handle:
-                                for block in self._file_iter(build_handle):
-                                    hash.update(block)
+                            for block in self._file_iter(build_handle):
+                                hash.update(block)
+                            build_handle.seek(0)
+                            # Check if the asset has been modifed.
+                            if build_name in compile_info:
+                                # Get the hash of the new file.
                                 if hash.digest() == compile_info[build_name]:
                                     continue
-                        # If we're here, then the asset has been modified! Time to re-save it!
-                        with open(build_filepath, "rb") as build_handle:
+                            # If we're here, then the asset has been modified by the build script! Time to re-save it!
                             self.delete(build_name)
                             self.save(build_name, File(build_handle, build_name))
-                        # Report on the modified asset.
-                        yield build_name, build_name, True
+                            # Report on the modified asset.
+                            yield build_name, build_name, True
         finally:
             # Clean up compile dirs.
             shutil.rmtree(compile_dir, ignore_errors=True)
