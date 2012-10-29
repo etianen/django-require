@@ -2,7 +2,6 @@ import tempfile, shutil, os.path, hashlib, subprocess, re
 from functools import partial
 
 from django.core.files.base import File
-from django.core.files.storage import Storage
 from django.contrib.staticfiles.storage import StaticFilesStorage
 
 from require.settings import REQUIRE_BUILD_PROFILE
