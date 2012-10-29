@@ -1,11 +1,22 @@
 import tempfile, shutil, os.path, hashlib, subprocess, re
-from functools import partial
+from functools import partial, wraps
 
 from django.core.files.base import File
 from django.contrib.staticfiles.storage import StaticFilesStorage
 from django.conf import settings
 
 from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_APP_VERSION
+
+
+def apply_remote(func):
+    @wraps(func)
+    def do_apply_remote(self, name, *args, **kwargs):
+        try:
+            self.path(name)
+        except NotImplementedError:
+            name = self._get_versioned_name(name)
+        return func(self, name, *args, **kwargs)
+    return do_apply_remote
 
 
 class OptimizedMixin(object):
@@ -31,6 +42,38 @@ class OptimizedMixin(object):
         if not settings.DEBUG:
             name = self._get_versioned_name(name)
         return super(OptimizedMixin, self).url(name)
+    
+    @apply_remote
+    def save(self, name, content):
+        return super(OptimizedMixin, self).save(name, content)
+        
+    @apply_remote
+    def delete(self, name):
+        return super(OptimizedMixin, self).delete(name)
+        
+    @apply_remote
+    def exists(self, name):
+        return super(OptimizedMixin, self).exists(name)
+        
+    @apply_remote
+    def listdir(self, name):
+        return super(OptimizedMixin, self).listdir(name)
+        
+    @apply_remote
+    def size(self, name):
+        return super(OptimizedMixin, self).size(name)
+        
+    @apply_remote
+    def accessed_time(self, name):
+        return super(OptimizedMixin, self).accessed_time(name)
+        
+    @apply_remote
+    def created_time(self, name):
+        return super(OptimizedMixin, self).created_time(name)
+        
+    @apply_remote
+    def modified_time(self, name):
+        return super(OptimizedMixin, self).modified_time(name)
     
     def post_process(self, paths, dry_run=False, **options):
         # If this is a dry run, give up now!
