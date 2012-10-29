@@ -3,7 +3,6 @@ from functools import partial, wraps
 
 from django.core.files.base import File
 from django.contrib.staticfiles.storage import StaticFilesStorage
-from django.conf import settings
 
 from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_APP_VERSION
 
@@ -39,9 +38,7 @@ class OptimizedMixin(object):
         return super(OptimizedMixin, self).path(self._get_versioned_name(name))
     
     def url(self, name):
-        if not settings.DEBUG:
-            name = self._get_versioned_name(name)
-        return super(OptimizedMixin, self).url(name)
+        return super(OptimizedMixin, self).url(self._get_versioned_name(name))
     
     @apply_remote
     def save(self, name, content):
