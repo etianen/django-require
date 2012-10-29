@@ -41,7 +41,7 @@ class OptimizedMixin(object):
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
                 # Copy and generate md5
-                hash = hashlib.sha1()
+                hash = hashlib.md5()
                 with open(src_path, "rb") as src_handle, open(dst_path, "wb") as dst_handle:
                     for block in self._file_iter(src_handle):
                         hash.update(block)
@@ -84,7 +84,7 @@ class OptimizedMixin(object):
                         # Determine if asset should be updated.
                         with open(build_filepath, "rb") as build_handle:
                             # Calculate asset hash.
-                            hash = hashlib.sha1()
+                            hash = hashlib.md5()
                             for block in self._file_iter(build_handle):
                                 hash.update(block)
                             build_handle.seek(0)
