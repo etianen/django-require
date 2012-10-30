@@ -22,7 +22,7 @@ class OptimizedFilesMixin(object):
     def post_process(self, paths, dry_run=False, **options):
         # If this is a dry run, give up now!
         if dry_run:
-            return ()
+            return
         # Determine paths to resources.
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
         rhino_jar_path = os.path.join(resources_dir, "js.jar")
@@ -33,7 +33,6 @@ class OptimizedFilesMixin(object):
         build_dir = tempfile.mkdtemp()
         try:
             compile_info = {}
-            modified_paths = set()
             # Copy all assets into the compile dir. 
             for name, storage_details in paths.items():
                 storage, path = storage_details
@@ -101,15 +100,12 @@ class OptimizedFilesMixin(object):
                             self.save(build_storage_name, File(build_handle, build_storage_name))
                             # Report on the modified asset.
                             paths[build_storage_name] = (self, build_name)
-                            modified_paths.add(build_storage_name)
+                            yield build_name, build_name, True
             # Report on modified assets.
             super_class = super(OptimizedFilesMixin, self)
             if hasattr(super_class, "post_process"):
-                return super_class.post_process(paths, dry_run, **options)
-            return (
-                (path, path, path in modified_paths)
-                for path in paths
-            )
+                for path in super_class.post_process(paths, dry_run, **options):
+                    yield path
         finally:
             # Clean up compile dirs.
             shutil.rmtree(compile_dir, ignore_errors=True)
