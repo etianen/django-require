@@ -90,7 +90,7 @@ class OptimizedMixin(object):
             for name, storage_details in paths.items():
                 storage, path = storage_details
                 src_path = storage.path(path)
-                dst_path = os.path.join(compile_dir, self._get_versioned_name(path))
+                dst_path = os.path.join(compile_dir, path)
                 dst_dir = os.path.dirname(dst_path)
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
@@ -103,7 +103,7 @@ class OptimizedMixin(object):
                 # Store details of file.
                 compile_info[name] = hash.digest()
             # Run the optimizer.
-            app_build_js_path = os.path.abspath(os.path.join(compile_dir, self._get_versioned_name(os.path.join(REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE))))
+            app_build_js_path = os.path.abspath(os.path.join(compile_dir, REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE))
             compiler_result = subprocess.call((
                 "java",
                 "-classpath",
@@ -112,7 +112,7 @@ class OptimizedMixin(object):
                 r_js_path,
                 "-o",
                 app_build_js_path,
-                "baseUrl={}".format(self._get_versioned_name(REQUIRE_BASE_URL)),
+                "baseUrl={}".format(REQUIRE_BASE_URL),
                 "dir={}".format(build_dir),
                 "appDir={}".format(compile_dir),
             ))
@@ -125,12 +125,11 @@ class OptimizedMixin(object):
             # Update assets with modified ones.
             if compiler_result == 0:
                 # Walk the compiled directory, checking for modified assets.
-                build_comparison_dir = os.path.join(build_dir, self._get_versioned_name(""))[:-1]
-                for build_dirpath, _, build_filenames in os.walk(build_comparison_dir):
+                for build_dirpath, _, build_filenames in os.walk(build_dir):
                     for build_filename in build_filenames:
                         # Determine asset name.
                         build_filepath = os.path.join(build_dirpath, build_filename)
-                        build_name = build_filepath[len(build_comparison_dir)+1:]
+                        build_name = build_filepath[len(build_dir)+1:]
                         build_storage_name = build_name.replace(os.sep, "/")
                         # Ignore certain files.
                         if any(pattern.match(build_name) for pattern in exclude_patterns):
