@@ -3,6 +3,7 @@ from functools import partial
 from contextlib import closing
 
 from django.core.files.base import File
+from django.core.files.storage import FileSystemStorage
 from django.contrib.staticfiles.storage import StaticFilesStorage, CachedStaticFilesStorage
 
 from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE
@@ -70,6 +71,8 @@ class OptimizedFilesMixin(object):
             ]
             # Update assets with modified ones.
             if compiler_result == 0:
+                # Make a filesystem storage for passing to superclasses.
+                compiled_storage = FileSystemStorage(build_dir)
                 # Walk the compiled directory, checking for modified assets.
                 for build_dirpath, _, build_filenames in os.walk(build_dir):
                     for build_filename in build_filenames:
@@ -81,6 +84,7 @@ class OptimizedFilesMixin(object):
                         if any(pattern.match(build_name) for pattern in exclude_patterns):
                             # Delete from storage, if originally present.
                             if build_name in compile_info:
+                                del paths[build_storage_name]
                                 self.delete(build_storage_name)
                             continue
                         # Update the asset.
@@ -99,7 +103,7 @@ class OptimizedFilesMixin(object):
                             self.delete(build_storage_name)
                             self.save(build_storage_name, File(build_handle, build_storage_name))
                             # Report on the modified asset.
-                            paths[build_storage_name] = (self, build_name)
+                            paths[build_storage_name] = (compiled_storage, build_name)
                             yield build_name, build_name, True
             # Report on modified assets.
             super_class = super(OptimizedFilesMixin, self)
