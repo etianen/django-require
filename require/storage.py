@@ -1,24 +1,14 @@
 import tempfile, shutil, os.path, hashlib, subprocess, re
-from functools import partial, wraps
+from functools import partial
+from contextlib import closing
 
 from django.core.files.base import File
-from django.contrib.staticfiles.storage import StaticFilesStorage
+from django.contrib.staticfiles.storage import StaticFilesStorage, CachedStaticFilesStorage
 
-from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_APP_VERSION
-
-
-def apply_remote(func):
-    @wraps(func)
-    def do_apply_remote(self, name, *args, **kwargs):
-        try:
-            self.path(name)
-        except NotImplementedError:
-            name = self._get_versioned_name(name)
-        return func(self, name, *args, **kwargs)
-    return do_apply_remote
+from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE
 
 
-class OptimizedMixin(object):
+class OptimizedFilesMixin(object):
     
     COPY_BLOCK_SIZE = 1024*1024  # 1 MB.
     
@@ -29,53 +19,10 @@ class OptimizedMixin(object):
     def _file_iter(self, handle):
         return iter(partial(handle.read, self.COPY_BLOCK_SIZE), "")
     
-    def _get_versioned_name(self, name):
-        if REQUIRE_APP_VERSION is not None:
-            name = "/".join((REQUIRE_APP_VERSION, name))
-        return name
-    
-    def path(self, name):
-        return super(OptimizedMixin, self).path(self._get_versioned_name(name))
-    
-    def url(self, name):
-        return super(OptimizedMixin, self).url(self._get_versioned_name(name))
-    
-    @apply_remote
-    def save(self, name, content):
-        return super(OptimizedMixin, self).save(name, content)
-        
-    @apply_remote
-    def delete(self, name):
-        return super(OptimizedMixin, self).delete(name)
-        
-    @apply_remote
-    def exists(self, name):
-        return super(OptimizedMixin, self).exists(name)
-        
-    @apply_remote
-    def listdir(self, name):
-        return super(OptimizedMixin, self).listdir(name)
-        
-    @apply_remote
-    def size(self, name):
-        return super(OptimizedMixin, self).size(name)
-        
-    @apply_remote
-    def accessed_time(self, name):
-        return super(OptimizedMixin, self).accessed_time(name)
-        
-    @apply_remote
-    def created_time(self, name):
-        return super(OptimizedMixin, self).created_time(name)
-        
-    @apply_remote
-    def modified_time(self, name):
-        return super(OptimizedMixin, self).modified_time(name)
-    
     def post_process(self, paths, dry_run=False, **options):
         # If this is a dry run, give up now!
         if dry_run:
-            return
+            return ()
         # Determine paths to resources.
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
         rhino_jar_path = os.path.join(resources_dir, "js.jar")
@@ -86,17 +33,17 @@ class OptimizedMixin(object):
         build_dir = tempfile.mkdtemp()
         try:
             compile_info = {}
+            modified_paths = set()
             # Copy all assets into the compile dir. 
             for name, storage_details in paths.items():
                 storage, path = storage_details
-                src_path = storage.path(path)
                 dst_path = os.path.join(compile_dir, path)
                 dst_dir = os.path.dirname(dst_path)
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
                 # Copy and generate md5
                 hash = hashlib.md5()
-                with open(src_path, "rb") as src_handle, open(dst_path, "wb") as dst_handle:
+                with closing(storage.open(path, "rb")) as src_handle, open(dst_path, "wb") as dst_handle:
                     for block in self._file_iter(src_handle):
                         hash.update(block)
                         dst_handle.write(block)
@@ -153,14 +100,27 @@ class OptimizedMixin(object):
                             self.delete(build_storage_name)
                             self.save(build_storage_name, File(build_handle, build_storage_name))
                             # Report on the modified asset.
-                            yield build_name, build_name, True
+                            paths[build_storage_name] = (self, build_name)
+                            modified_paths.add(build_storage_name)
+            # Report on modified assets.
+            super_class = super(OptimizedFilesMixin, self)
+            if hasattr(super_class, "post_process"):
+                return super_class.post_process(paths, dry_run, **options)
+            return (
+                (path, path, path in modified_paths)
+                for path in paths
+            )
         finally:
             # Clean up compile dirs.
             shutil.rmtree(compile_dir, ignore_errors=True)
             shutil.rmtree(build_dir, ignore_errors=True)
             
         
-        
-class OptimizedStaticFilesStorage(OptimizedMixin, StaticFilesStorage):
+class OptimizedStaticFilesStorage(OptimizedFilesMixin, StaticFilesStorage):
+    
+    pass
+
+
+class OptimizedCachedStaticFilesStorage(OptimizedFilesMixin, CachedStaticFilesStorage):
     
     pass
