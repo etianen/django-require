@@ -10,36 +10,39 @@ Features
 --------
 
 *   Optimize your static assets using the excellent r.js optimizer.
-*   Compile standalone modules using the [almond.js][] AMD shim.
+*   Compile standalone modules using the [almond.js][] shim.
 *   Compatible with any Django staticfiles storage backend.
 
 [almond.js]: https://github.com/jrburke/almond
 
 
-Getting started
+Installation
 ---------------
 
 1.  Checkout the latest django-require release and copy or symlink the `require` directory into your `PYTHONPATH`.
 2.  Add `'require'` to your `INSTALLED_APPS` setting.
+3.  Set your `STATICFILES_STORAGE` setting to `'require.storage.OptimizedStaticFilesStorage'` or `'require.storage.OptimizedCachedStaticFilesStorage'`.  
 
 
 Available settings
 ------------------
 
-Available settings, and their default values, are shown below.
+Available settings, and their default values, are shown below. You should configure this to match the layout of your
+project's static files. Please consult the [RequireJS][] documentation for more information about how to build javascript
+using RequireJS.
 
 ```python
 # The baseUrl to pass to the r.js optimizer.
 REQUIRE_BASE_URL = "js"
 
 # The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
-# A sensible value would be 'app.build.js'.
+# A sensible value would be 'app.build.js'. Leave blank to use the built-in default build profile.
 REQUIRE_BUILD_PROFILE = None
 
 # The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
 REQUIRE_JS = "require.js"
 
-# A dictionary of standalone modules to build with almond.js.
+# A dictionary of standalone modules to build with almond.js. See the section on Standalone Modules, below.
 REQUIRE_STANDALONE_MODULES = {}
 
 # Whether to run django-require in debug mode.
@@ -49,12 +52,53 @@ REQUIRE_DEBUG = settings.DEBUG
 REQUIRE_EXCLUDE = ("build.txt",)
 ```
 
-*   `REQUIRE_BASE_URL` - The baseUrl to pass to the r.js optimizer. Defaults to `'js'`.
-*   `REQUIRE_BUILD_PROFILE` - The name of a build profile to use for your project, relative to `REQUIRE_BASE_URL`. Defaults to `None`. A sensible value would be `'app.build.js'`.
-*   `REQUIRE_JS` - The name of the require.js script used by your project, relative to `REQUIRE_BASE_URL`. Defaults to `'require.js'`.
-*   `REQUIRE_STANDALONE_MODULES` - A dictionary of standalone modules to build with [almond.js][]. Defaults to `{}`. Please see the Standalone Module section above.
-*   `REQUIRE_DEBUG` - Whether to run django-require in debug mode. Defaults to `settings.DEBUG`.
-*   `REQUIRE_EXCLUDE` - A tuple of files to exclude from the compilation result of r.js. Defaults to `('build.txt',)`. 
+
+Generating require.js
+---------------------
+
+As a shortcut to downloading a copy of require.js from the internet, you can simply run the `require_init` management
+to copy a version of require.js into your `STATICFILES_DIRS`, at the location specified by your `REQUIRE_BASE_URL`
+and `REQUIRE_JS` settings.
+
+```
+$ ./manage.py require_init
+```
+
+
+Generating build profiles
+-------------------------
+
+In almost all cases, you'll want to create a custom build profile for your project. To help you get started, django-require
+can generate a default build profile for your project. Just set your `REQUIRE_BUILD_PROFILE` setting to where you'd like to
+save the build profile, and run `require_init`.
+
+
+Running javascript modules in templates
+---------------------------------------
+
+You can run javascript modules in templates by using the `{% require_module %}` template tag.
+
+```html
+<html>
+    {% load require %}
+    <head>
+        {% require_module 'main' %}
+    </head>
+    <body></body>
+</html>
+```
+
+This template fragment would then render to something like:
+
+```html
+<html>
+    <head>
+        <script src="/static/js/require.js" data-main="/static/js/main.js"></script>
+    </head>
+    <body></body>
+</html>
+```
+
 
 
 Support and announcements
