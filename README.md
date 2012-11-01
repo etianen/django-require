@@ -42,7 +42,8 @@ REQUIRE_BUILD_PROFILE = None
 # The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
 REQUIRE_JS = "require.js"
 
-# A dictionary of standalone modules to build with almond.js. See the section on Standalone Modules, below.
+# A dictionary of standalone modules to build with almond.js.
+# See the section on Standalone Modules, below.
 REQUIRE_STANDALONE_MODULES = {}
 
 # Whether to run django-require in debug mode.
@@ -69,7 +70,7 @@ Generating build profiles
 -------------------------
 
 In almost all cases, you'll want to create a custom build profile for your project. To help you get started, django-require
-can generate a default build profile into your `STATICFILES_DIRS`. Just set your `REQUIRE_BUILD_PROFILE` setting to the build profile name,
+can generate a default build profile into your `STATICFILES_DIRS`. Just set your `REQUIRE_BUILD_PROFILE` setting to a build profile name,
 and run `require_init`. A good name for a build profile would be `'app.build.js'`.
 
 Any standalone modules that your specify with a build profile will also have a default build profile generated when you run this
@@ -110,7 +111,7 @@ This template fragment would then render to something like:
 ```html
 <html>
     <head>
-        <script src="/static/js/main.js"></script>
+        <script src="/static/js/main-built.js"></script>
     </head>
     <body></body>
 </html>
@@ -154,11 +155,10 @@ django-require provides two storage classes that are ready to use with the r.js 
 Creating your own optimizing storage classes
 --------------------------------------------
 
-You can add r.js optmization to any django staticfiles storage class by using the require.storage.OptimizedFilesMixin. For example, to make an optimizing
-storage that uploads to Amazon S3 using the [django-storages][] `S3BotoStorage`:
+You can add r.js optmization to any django staticfiles storage class by using the `require.storage.OptimizedFilesMixin`. For example, to make an optimizing
+storage that uploads to Amazon S3 using `S3BotoStorage` from [django-storages][]:
 
 ```python
-from django.contrib.staticfiles.storage import CachedFilesMixin
 from storages.backends.s3boto import S3BotoStorage
 from require.storage import OptimizedFilesMixin
 
@@ -167,6 +167,7 @@ class OptimizedS3BotoStorage(OptimizedFilesMixin, S3BotoStorage):
     pass
 
 # S3 storage with r.js optimization and MD5 fingerprinting.
+from django.contrib.staticfiles.storage import CachedFilesMixin
 class OptimizedCachedS3BotoStorage(OptimizedFilesMixin, CachedFilesMixin, S3BotoStorage):
     pass
 ```
@@ -178,7 +179,7 @@ class OptimizedCachedS3BotoStorage(OptimizedFilesMixin, CachedFilesMixin, S3Boto
 Support and announcements
 -------------------------
 
-Legacy downloads and bug reporting can be found at the [main project website][].
+Downloads and bug tracking can be found at the [main project website][].
 
 [main project website]: http://github.com/etianen/django-require
     "django-require on GitHub"
