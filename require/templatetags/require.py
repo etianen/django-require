@@ -13,6 +13,13 @@ register = template.Library()
 
 @register.simple_tag
 def require_module(module):
+    """
+    Inserts a script tag to load the named module, which is relative to the REQUIRE_BASE_URL setting.
+    
+    If the module is configured in REQUIRE_STANDALONE_MODULES, and REQUIRE_DEBUG is False, then
+    then the standalone built version of the module will be loaded instead, bypassing require.js
+    for extra load performance.
+    """
     if not REQUIRE_DEBUG and module in REQUIRE_STANDALONE_MODULES:
         return u"""<script src="{module}"></script>""".format(
             module = staticfiles_storage.url(resolve_require_module(REQUIRE_STANDALONE_MODULES[module]["out"])),
