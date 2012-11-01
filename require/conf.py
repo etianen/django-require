@@ -21,7 +21,7 @@ class LazySettings(object):
     
     @property
     def REQUIRE_DEBUG(self):
-        return getattr(django_settings, "REQUIRE_DEBUG", settings.DEBUG)
+        return getattr(django_settings, "REQUIRE_DEBUG", django_settings.DEBUG)
     
     @property
     def REQUIRE_EXCLUDE(self):

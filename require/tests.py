@@ -1,9 +1,11 @@
 import tempfile, shutil, os.path
 
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core.management import call_command
 from django.test import TestCase
 
 from require.conf import settings as require_settings
+from require.templatetags.require import require_module
 
 
 class RequireInitTest(TestCase):
@@ -40,3 +42,19 @@ class RequireInitTest(TestCase):
     
     def tearDown(self):
         shutil.rmtree(self.working_dir, ignore_errors=True)
+        
+        
+class RequireModuleTest(TestCase):
+    
+    def testRequireModule(self):
+        with self.settings(REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={}):
+            self.assertHTMLEqual(require_module("main"), """<script src="{}" data-main="{}"></script>""".format(
+                staticfiles_storage.url("js/require.js"),
+                staticfiles_storage.url("js/main.js"),
+            ))
+            
+    def testStandaloneRequireModule(self):
+        with self.settings(REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js"}}):
+            self.assertHTMLEqual(require_module("main"), """<script src="{}"></script>""".format(
+                staticfiles_storage.url("js/main-built.js"),
+            ))
