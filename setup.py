@@ -12,6 +12,7 @@ setup(
         "require",
         "require.management",
         "require.management.commands",
+        "require.templatetags",
     ],
     package_data = {
         "require": [
