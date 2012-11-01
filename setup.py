@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name = "django-require",
-    version = "0.1.1",
+    version = "0.1.2",
     description = "A Django staticfiles post-processor for optimizing with require.js.",
     author = "Dave Hall",
     author_email = "dave@etianen.com",
