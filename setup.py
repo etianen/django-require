@@ -1,13 +1,20 @@
 from distutils.core import setup
 
+from require import __version__
+
+
+version_str = ".".join(str(n) for n in __version__)
+
 
 setup(
     name = "django-require",
-    version = "0.1.2",
+    version = version_str,
+    license = "BSD",
     description = "A Django staticfiles post-processor for optimizing with require.js.",
     author = "Dave Hall",
     author_email = "dave@etianen.com",
     url = "https://github.com/etianen/django-require",
+    download_url = "https://github.com/downloads/etianen/django-require/django-require-{}.tar.gz".format(version_str),
     packages = [
         "require",
         "require.management",
