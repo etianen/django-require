@@ -13,16 +13,48 @@ from require.helpers import resolve_require_url
 
 class TemporaryCompileEnvironment(object):
     
-    def __init__(self):
+    REQUIRE_RESOURCES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
+    
+    def __init__(self, verbosity):
         self.compile_dir = tempfile.mkdtemp()
         self.build_dir = tempfile.mkdtemp()
-        self.digests = {}
+        self.verbosity = verbosity
+    
+    def resource_path(self, name):
+        return os.path.join(self.REQUIRE_RESOURCES_DIR, name)
     
     def compile_dir_path(self, name):
         return os.path.abspath(os.path.join(self.compile_dir, require_settings.REQUIRE_BASE_URL, name))
     
     def build_dir_path(self, name):
         return os.path.abspath(os.path.join(self.build_dir, require_settings.REQUIRE_BASE_URL, name))
+    
+    def run_optimizer(self, *args, **kwargs):
+        # Configure the compiler.
+        compiler_args = [
+            "java",
+            "-classpath",
+            ":".join((
+                self.resource_path("js.jar"),
+                self.resource_path("compiler.jar"),
+            )),
+            "org.mozilla.javascript.tools.shell.Main",
+            self.resource_path("r.js"),
+            "-o",
+        ]
+        compiler_args.extend(args)
+        if self.verbosity == 0:
+            kwargs.setdefault("logLevel", "4")
+        compiler_args.extend(
+            "{}={}".format(
+                key, value
+            )
+            for key, value
+            in kwargs.items()
+        )
+        # Run the compiler in a subprocess.
+        if subprocess.call(compiler_args) != 0:
+            raise OptimizationError("Error while running r.js optimizer.")
     
     def __enter__(self):
         return self
@@ -41,45 +73,15 @@ class OptimizedFilesMixin(object):
     
     REQUIRE_COPY_BLOCK_SIZE = 1024*1024  # 1 MB.
     
-    REQUIRE_RESOURCES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
-    
     def _file_iter(self, handle):
         return iter(partial(handle.read, self.REQUIRE_COPY_BLOCK_SIZE), "")
     
-    def _resource_path(self, name):
-        return os.path.join(self.REQUIRE_RESOURCES_DIR, name)
-    
-    def _run_optimizer(self, *args, **kwargs):
-        # Configure the compiler.
-        compiler_args = [
-            "java",
-            "-classpath",
-            ":".join((
-                self._resource_path("js.jar"),
-                self._resource_path("compiler.jar"),
-            )),
-            "org.mozilla.javascript.tools.shell.Main",
-            self._resource_path("r.js"),
-            "-o",
-        ]
-        compiler_args.extend(args)
-        compiler_args.extend(
-            "{}={}".format(
-                key, value
-            )
-            for key, value
-            in kwargs.items()
-        )
-        # Run the compiler in a subprocess.
-        if subprocess.call(compiler_args) != 0:
-            raise OptimizationError("Error while running r.js optimizer.")
-    
-    def post_process(self, paths, dry_run=False, **options):
+    def post_process(self, paths, dry_run=False, verbosity=1, **options):
         # If this is a dry run, give up now!
         if dry_run:
             return
         # Compile in a temporary environment.
-        with TemporaryCompileEnvironment() as env:
+        with TemporaryCompileEnvironment(verbosity=verbosity) as env:
             exclude_names = list(require_settings.REQUIRE_EXCLUDE)
             compile_info = {}
             # Copy all assets into the compile dir. 
@@ -102,8 +104,8 @@ class OptimizedFilesMixin(object):
                 app_build_js_path = env.compile_dir_path(require_settings.REQUIRE_BUILD_PROFILE)
                 exclude_names.append(resolve_require_url(require_settings.REQUIRE_BUILD_PROFILE))
             else:
-                app_build_js_path = self._resource_path("app.build.js")
-            self._run_optimizer(
+                app_build_js_path = env.resource_path("app.build.js")
+            env.run_optimizer(
                 app_build_js_path,
                 dir = env.build_dir,
                 appDir = env.compile_dir,
@@ -112,7 +114,7 @@ class OptimizedFilesMixin(object):
             # Compile standalone modules.
             if require_settings.REQUIRE_STANDALONE_MODULES:
                 shutil.copyfile(
-                    self._resource_path("almond.js"),
+                    env.resource_path("almond.js"),
                     env.compile_dir_path("almond.js"),
                 )
                 exclude_names.append(resolve_require_url("almond.js"))
@@ -122,8 +124,8 @@ class OptimizedFilesMixin(object):
                         module_build_js_path = env.compile_dir_path(standalone_config["build_profile"])
                         exclude_names.append(resolve_require_url(standalone_config["build_profile"]))
                     else:
-                        module_build_js_path = self._resource_path("module.build.js")
-                    self._run_optimizer(
+                        module_build_js_path = env.resource_path("module.build.js")
+                    env.run_optimizer(
                         module_build_js_path,
                         name = "almond",
                         include = standalone_module,
