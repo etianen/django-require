@@ -69,8 +69,11 @@ Generating build profiles
 -------------------------
 
 In almost all cases, you'll want to create a custom build profile for your project. To help you get started, django-require
-can generate a default build profile for your project. Just set your `REQUIRE_BUILD_PROFILE` setting to where you'd like to
-save the build profile, and run `require_init`.
+can generate a default build profile into your `STATICFILES_DIRS`. Just set your `REQUIRE_BUILD_PROFILE` setting to the build profile name,
+and run `require_init`. A good name for a build profile would be `'app.build.js'`.
+
+Any standalone modules that your specify with a build profile will also have a default build profile generated when you run this
+command.
 
 
 Running javascript modules in templates
@@ -98,6 +101,77 @@ This template fragment would then render to something like:
     <body></body>
 </html>
 ```
+
+If the `'main'` module was specified as a standalone module in your `REQUIRE_STANDALONE_MODULES` setting, and `REQUIRE_DEBUG`
+is `False`, then the template fragement would instead render as:
+
+This template fragment would then render to something like:
+
+```html
+<html>
+    <head>
+        <script src="/static/js/main.js"></script>
+    </head>
+    <body></body>
+</html>
+```
+
+
+Building standalone modules
+---------------------------
+
+As a further optimization to your code, you can build your modules to run independently of require.js, which can often speed
+up page load times. Standalone modules are built using the almond.js shim, so consult the [almond.js][] documentation
+to make sure that it's safe to build your module in standalone mode.
+
+To specify standalone modules, simply add them to your `REQUIRE_STANDALONE_MODULES` setting, as below:
+
+```python
+REQUIRE_STANDALONE_MODULES = {
+    "main": {
+        # Where to output the built module, relative to REQUIRE_BASE_URL.
+        "out": "main-built.js",
+        
+        # Optional: A build profile used to build this standalone module.
+        "build_profile": "main.build.js",
+    }
+}
+```
+
+
+Running the r.js optmizer
+-------------------------
+
+The r.js optimizer is run automatically whenever you call the `collectstatic` management command. The optimizer
+is run as a post-processing step on your static files.
+
+django-require provides two storage classes that are ready to use with the r.js optimizer:
+
+*   `require.storage.OptimizedStaticFilesStorage` - A filesystem-based storage that runs the r.js optimizer.
+*   `require.storage.OptimizedCachedStaticFilesStorage` - As above, but fingerprints all files with an MD5 hash of their contents for HTTP cache-busting.
+
+
+Creating your own optimizing storage classes
+--------------------------------------------
+
+You can add r.js optmization to any django staticfiles storage class by using the require.storage.OptimizedFilesMixin. For example, to make an optimizing
+storage that uploads to Amazon S3 using the [django-storages][] `S3BotoStorage`:
+
+```python
+from django.contrib.staticfiles.storage import CachedFilesMixin
+from storages.backends.s3boto import S3BotoStorage
+from require.storage import OptimizedFilesMixin
+
+# S3 storage with r.js optimization.
+class OptimizedS3BotoStorage(OptimizedFilesMixin, S3BotoStorage):
+    pass
+
+# S3 storage with r.js optimization and MD5 fingerprinting.
+class OptimizedCachedS3BotoStorage(OptimizedFilesMixin, CachedFilesMixin, S3BotoStorage):
+    pass
+```
+
+[django-storages]: http://django-storages.readthedocs.org/en/latest/
 
 
 
