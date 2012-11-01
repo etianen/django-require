@@ -34,8 +34,9 @@ class Command(NoArgsCommand):
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources"))
         resources = [
             ("require.js", REQUIRE_JS),
-            ("app.build.js", REQUIRE_BUILD_PROFILE),
         ]
+        if REQUIRE_BUILD_PROFILE is not None:
+            resources.append(("app.build.js", REQUIRE_BUILD_PROFILE))
         for standalone_config in REQUIRE_STANDALONE_MODULES.values():
             if "build_profile" in standalone_config:
                 resources.append(("module.build.js", standalone_config["build_profile"]))

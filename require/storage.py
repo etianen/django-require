@@ -1,4 +1,4 @@
-import tempfile, shutil, os.path, hashlib, subprocess, re
+import tempfile, shutil, os.path, hashlib, subprocess
 from functools import partial
 from contextlib import closing
 
@@ -7,7 +7,8 @@ from django.core.files.base import File
 from django.core.files.storage import FileSystemStorage
 from django.contrib.staticfiles.storage import StaticFilesStorage, CachedStaticFilesStorage
 
-from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_STANDALONE_MODULES
+from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_STANDALONE_MODULES, REQUIRE_EXCLUDE
+from require.helpers import resolve_require_url
 
 
 class TemporaryCompileEnvironment(object):
@@ -39,11 +40,6 @@ class OptimizationError(Exception):
 class OptimizedFilesMixin(object):
     
     REQUIRE_COPY_BLOCK_SIZE = 1024*1024  # 1 MB.
-    
-    REQUIRE_EXCLUDE_PATTERNS = (
-        re.escape("build.txt"),
-        re.escape("build.txt"),
-    )
     
     REQUIRE_RESOURCES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
     
@@ -84,6 +80,7 @@ class OptimizedFilesMixin(object):
             return
         # Compile in a temporary environment.
         with TemporaryCompileEnvironment() as env:
+            exclude_names = list(REQUIRE_EXCLUDE)
             compile_info = {}
             # Copy all assets into the compile dir. 
             for name, storage_details in paths.items():
@@ -101,7 +98,11 @@ class OptimizedFilesMixin(object):
                 # Store details of file.
                 compile_info[name] = hash.digest()
             # Run the optimizer.
-            app_build_js_path = env.compile_dir_path(REQUIRE_BUILD_PROFILE)
+            if REQUIRE_BUILD_PROFILE is not None:
+                app_build_js_path = env.compile_dir_path(REQUIRE_BUILD_PROFILE)
+                exclude_names.append(resolve_require_url(REQUIRE_BUILD_PROFILE))
+            else:
+                app_build_js_path = self._resource_path("app.build.js")
             self._run_optimizer(
                 app_build_js_path,
                 dir = env.build_dir,
@@ -114,10 +115,12 @@ class OptimizedFilesMixin(object):
                     self._resource_path("almond.js"),
                     env.compile_dir_path("almond.js"),
                 )
+                exclude_names.append(resolve_require_url("almond.js"))
             for standalone_module, standalone_config in REQUIRE_STANDALONE_MODULES.items():
                 if "out" in standalone_config:
                     if "build_profile" in standalone_config:
                         module_build_js_path = env.compile_dir_path(standalone_config["build_profile"])
+                        exclude_names.append(resolve_require_url(standalone_config["build_profile"]))
                     else:
                         module_build_js_path = self._resource_path("module.build.js")
                     self._run_optimizer(
@@ -131,24 +134,6 @@ class OptimizedFilesMixin(object):
                     raise ImproperlyConfigured(u"No 'out' option specified for module '{module}' in REQUIRE_STANDALONE_MODULES setting.".format(
                         module = standalone_module
                     ))
-            # Compile the exclude patterns.
-            exclude_patterns = [
-                re.compile(pattern)
-                for pattern
-                in self.REQUIRE_EXCLUDE_PATTERNS + tuple(
-                    re.escape(os.path.normpath(os.path.join(REQUIRE_BASE_URL, js_exclude)))
-                    for js_exclude
-                    in (
-                        REQUIRE_BUILD_PROFILE,
-                        "almond.js",
-                    ) + tuple(
-                        standalone_config["build_profile"]
-                        for standalone_config
-                        in REQUIRE_STANDALONE_MODULES.values()
-                        if "build_profile" in standalone_config
-                    )
-                )
-            ]
             # Update assets with modified ones.
             compiled_storage = FileSystemStorage(env.build_dir)
             # Walk the compiled directory, checking for modified assets.
@@ -159,7 +144,7 @@ class OptimizedFilesMixin(object):
                     build_name = build_filepath[len(env.build_dir)+1:]
                     build_storage_name = build_name.replace(os.sep, "/")
                     # Ignore certain files.
-                    if any(pattern.match(build_name) for pattern in exclude_patterns):
+                    if build_storage_name in exclude_names:
                         # Delete from storage, if originally present.
                         if build_name in compile_info:
                             del paths[build_storage_name]
