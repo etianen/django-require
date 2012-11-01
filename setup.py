@@ -10,7 +10,7 @@ setup(
     name = "django-require",
     version = version_str,
     license = "BSD",
-    description = "A Django staticfiles post-processor for optimizing with require.js.",
+    description = "A Django staticfiles post-processor for optimizing with RequireJS.",
     author = "Dave Hall",
     author_email = "dave@etianen.com",
     url = "https://github.com/etianen/django-require",

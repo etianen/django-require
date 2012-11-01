@@ -1,5 +1,5 @@
 """
-A Django staticfiles post-processor for optimizing with require.js.
+A Django staticfiles post-processor for optimizing with RequireJS.
 
 Developed by Dave Hall.
 
