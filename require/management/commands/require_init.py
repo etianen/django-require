@@ -36,7 +36,6 @@ class Command(NoArgsCommand):
             "--dir",
             action = "store",
             dest = "dir",
-            default = default_staticfiles_dir(),
             help = "Copy files into the named directory. Defaults to the first item in your STATICFILES_DIRS setting.", 
         ),
     )
@@ -45,7 +44,7 @@ class Command(NoArgsCommand):
     
     def handle_noargs(self, **options):
         verbosity = int(options.get("verbosity", 1))
-        dst_dir = options["dir"]
+        dst_dir = options["dir"] or default_staticfiles_dir()
         # Calculate paths.
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources"))
         resources = [
