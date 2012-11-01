@@ -4,7 +4,7 @@ from django import template
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 
-from require.settings import REQUIRE_JS, REQUIRE_STANDALONE_MODULES, REQUIRE_DEBUG
+from require.conf import settings as require_settings
 from require.helpers import resolve_require_url, resolve_require_module
 
 
@@ -20,11 +20,11 @@ def require_module(module):
     then the standalone built version of the module will be loaded instead, bypassing require.js
     for extra load performance.
     """
-    if not REQUIRE_DEBUG and module in REQUIRE_STANDALONE_MODULES:
+    if not require_settings.REQUIRE_DEBUG and module in require_settings.REQUIRE_STANDALONE_MODULES:
         return u"""<script src="{module}"></script>""".format(
-            module = staticfiles_storage.url(resolve_require_module(REQUIRE_STANDALONE_MODULES[module]["out"])),
+            module = staticfiles_storage.url(resolve_require_module(require_settings.REQUIRE_STANDALONE_MODULES[module]["out"])),
         )
     return u"""<script src="{src}" data-main="{module}"></script>""".format(
-        src = staticfiles_storage.url(resolve_require_url(REQUIRE_JS)),
+        src = staticfiles_storage.url(resolve_require_url(require_settings.REQUIRE_JS)),
         module = staticfiles_storage.url(resolve_require_module(module)),
     )

@@ -7,7 +7,7 @@ from django.core.files.base import File
 from django.core.files.storage import FileSystemStorage
 from django.contrib.staticfiles.storage import StaticFilesStorage, CachedStaticFilesStorage
 
-from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_STANDALONE_MODULES, REQUIRE_EXCLUDE
+from require.conf import settings as require_settings
 from require.helpers import resolve_require_url
 
 
@@ -19,10 +19,10 @@ class TemporaryCompileEnvironment(object):
         self.digests = {}
     
     def compile_dir_path(self, name):
-        return os.path.abspath(os.path.join(self.compile_dir, REQUIRE_BASE_URL, name))
+        return os.path.abspath(os.path.join(self.compile_dir, require_settings.REQUIRE_BASE_URL, name))
     
     def build_dir_path(self, name):
-        return os.path.abspath(os.path.join(self.build_dir, REQUIRE_BASE_URL, name))
+        return os.path.abspath(os.path.join(self.build_dir, require_settings.REQUIRE_BASE_URL, name))
     
     def __enter__(self):
         return self
@@ -80,7 +80,7 @@ class OptimizedFilesMixin(object):
             return
         # Compile in a temporary environment.
         with TemporaryCompileEnvironment() as env:
-            exclude_names = list(REQUIRE_EXCLUDE)
+            exclude_names = list(require_settings.REQUIRE_EXCLUDE)
             compile_info = {}
             # Copy all assets into the compile dir. 
             for name, storage_details in paths.items():
@@ -98,25 +98,25 @@ class OptimizedFilesMixin(object):
                 # Store details of file.
                 compile_info[name] = hash.digest()
             # Run the optimizer.
-            if REQUIRE_BUILD_PROFILE is not None:
-                app_build_js_path = env.compile_dir_path(REQUIRE_BUILD_PROFILE)
-                exclude_names.append(resolve_require_url(REQUIRE_BUILD_PROFILE))
+            if require_settings.REQUIRE_BUILD_PROFILE is not None:
+                app_build_js_path = env.compile_dir_path(require_settings.REQUIRE_BUILD_PROFILE)
+                exclude_names.append(resolve_require_url(require_settings.REQUIRE_BUILD_PROFILE))
             else:
                 app_build_js_path = self._resource_path("app.build.js")
             self._run_optimizer(
                 app_build_js_path,
                 dir = env.build_dir,
                 appDir = env.compile_dir,
-                baseUrl = REQUIRE_BASE_URL,
+                baseUrl = require_settings.REQUIRE_BASE_URL,
             )
             # Compile standalone modules.
-            if REQUIRE_STANDALONE_MODULES:
+            if require_settings.REQUIRE_STANDALONE_MODULES:
                 shutil.copyfile(
                     self._resource_path("almond.js"),
                     env.compile_dir_path("almond.js"),
                 )
                 exclude_names.append(resolve_require_url("almond.js"))
-            for standalone_module, standalone_config in REQUIRE_STANDALONE_MODULES.items():
+            for standalone_module, standalone_config in require_settings.REQUIRE_STANDALONE_MODULES.items():
                 if "out" in standalone_config:
                     if "build_profile" in standalone_config:
                         module_build_js_path = env.compile_dir_path(standalone_config["build_profile"])
@@ -128,7 +128,7 @@ class OptimizedFilesMixin(object):
                         name = "almond",
                         include = standalone_module,
                         out = env.build_dir_path(standalone_config["out"]),
-                        baseUrl = os.path.join(env.compile_dir, REQUIRE_BASE_URL),
+                        baseUrl = os.path.join(env.compile_dir, require_settings.REQUIRE_BASE_URL),
                     )
                 else:
                     raise ImproperlyConfigured(u"No 'out' option specified for module '{module}' in REQUIRE_STANDALONE_MODULES setting.".format(

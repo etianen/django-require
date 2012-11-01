@@ -4,7 +4,7 @@ from optparse import make_option
 from django.core.management.base import NoArgsCommand
 from django.conf import settings
 
-from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_JS, REQUIRE_STANDALONE_MODULES
+from require.conf import settings as require_settings
 
 
 def default_staticfiles_dir():
@@ -49,16 +49,16 @@ class Command(NoArgsCommand):
         # Calculate paths.
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources"))
         resources = [
-            ("require.js", REQUIRE_JS),
+            ("require.js", require_settings.REQUIRE_JS),
         ]
-        if REQUIRE_BUILD_PROFILE is not None:
-            resources.append(("app.build.js", REQUIRE_BUILD_PROFILE))
-        for standalone_config in REQUIRE_STANDALONE_MODULES.values():
+        if require_settings.REQUIRE_BUILD_PROFILE is not None:
+            resources.append(("app.build.js", require_settings.REQUIRE_BUILD_PROFILE))
+        for standalone_config in require_settings.REQUIRE_STANDALONE_MODULES.values():
             if "build_profile" in standalone_config:
                 resources.append(("module.build.js", standalone_config["build_profile"]))
         # Check if the file exists.
         for resource_name, dst_name in resources:
-            dst_path = os.path.abspath(os.path.join(dst_dir, REQUIRE_BASE_URL, dst_name))
+            dst_path = os.path.abspath(os.path.join(dst_dir, require_settings.REQUIRE_BASE_URL, dst_name))
             if os.path.exists(dst_path) and not options["force"]:
                 if verbosity > 0:
                     self.stdout.write("{} already exists, skipping.\n".format(dst_path))
