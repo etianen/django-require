@@ -2,42 +2,93 @@ import tempfile, shutil, os.path, hashlib, subprocess, re
 from functools import partial
 from contextlib import closing
 
+from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import File
 from django.core.files.storage import FileSystemStorage
 from django.contrib.staticfiles.storage import StaticFilesStorage, CachedStaticFilesStorage
 
-from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE
+from require.settings import REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE, REQUIRE_STANDALONE_MODULES
+
+
+class TemporaryCompileEnvironment(object):
+    
+    def __init__(self):
+        self.compile_dir = tempfile.mkdtemp()
+        self.build_dir = tempfile.mkdtemp()
+        self.digests = {}
+    
+    def compile_dir_path(self, name):
+        return os.path.abspath(os.path.join(self.compile_dir, REQUIRE_BASE_URL, name))
+    
+    def build_dir_path(self, name):
+        return os.path.abspath(os.path.join(self.build_dir, REQUIRE_BASE_URL, name))
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, *args):
+        shutil.rmtree(self.compile_dir, ignore_errors=True)
+        shutil.rmtree(self.build_dir, ignore_errors=True)
+
+
+class OptimizationError(Exception):
+    
+    pass
 
 
 class OptimizedFilesMixin(object):
     
-    COPY_BLOCK_SIZE = 1024*1024  # 1 MB.
+    REQUIRE_COPY_BLOCK_SIZE = 1024*1024  # 1 MB.
     
-    EXCLUDE_PATTERNS = (
+    REQUIRE_EXCLUDE_PATTERNS = (
+        re.escape("build.txt"),
         re.escape("build.txt"),
     )
     
+    REQUIRE_RESOURCES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
+    
     def _file_iter(self, handle):
-        return iter(partial(handle.read, self.COPY_BLOCK_SIZE), "")
+        return iter(partial(handle.read, self.REQUIRE_COPY_BLOCK_SIZE), "")
+    
+    def _resource_path(self, name):
+        return os.path.join(self.REQUIRE_RESOURCES_DIR, name)
+    
+    def _run_optimizer(self, *args, **kwargs):
+        # Configure the compiler.
+        compiler_args = [
+            "java",
+            "-classpath",
+            ":".join((
+                self._resource_path("js.jar"),
+                self._resource_path("compiler.jar"),
+            )),
+            "org.mozilla.javascript.tools.shell.Main",
+            self._resource_path("r.js"),
+            "-o",
+        ]
+        compiler_args.extend(args)
+        compiler_args.extend(
+            "{}={}".format(
+                key, value
+            )
+            for key, value
+            in kwargs.items()
+        )
+        # Run the compiler in a subprocess.
+        if subprocess.call(compiler_args) != 0:
+            raise OptimizationError("Error while running r.js optimizer.")
     
     def post_process(self, paths, dry_run=False, **options):
         # If this is a dry run, give up now!
         if dry_run:
             return
-        # Determine paths to resources.
-        resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
-        rhino_jar_path = os.path.join(resources_dir, "js.jar")
-        compiler_jar_path = os.path.join(resources_dir, "compiler.jar")
-        r_js_path = os.path.join(resources_dir, "r.js")
-        # Create the temporary compile dirs.
-        compile_dir = tempfile.mkdtemp()
-        build_dir = tempfile.mkdtemp()
-        try:
+        # Compile in a temporary environment.
+        with TemporaryCompileEnvironment() as env:
             compile_info = {}
             # Copy all assets into the compile dir. 
             for name, storage_details in paths.items():
                 storage, path = storage_details
-                dst_path = os.path.join(compile_dir, path)
+                dst_path = os.path.join(env.compile_dir, path)
                 dst_dir = os.path.dirname(dst_path)
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
@@ -50,70 +101,93 @@ class OptimizedFilesMixin(object):
                 # Store details of file.
                 compile_info[name] = hash.digest()
             # Run the optimizer.
-            app_build_js_path = os.path.abspath(os.path.join(compile_dir, REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE))
-            compiler_result = subprocess.call((
-                "java",
-                "-classpath",
-                ":".join((rhino_jar_path, compiler_jar_path)),
-                "org.mozilla.javascript.tools.shell.Main",
-                r_js_path,
-                "-o",
+            app_build_js_path = env.compile_dir_path(REQUIRE_BUILD_PROFILE)
+            self._run_optimizer(
                 app_build_js_path,
-                "baseUrl={}".format(REQUIRE_BASE_URL),
-                "dir={}".format(build_dir),
-                "appDir={}".format(compile_dir),
-            ))
+                dir = env.build_dir,
+                appDir = env.compile_dir,
+                baseUrl = REQUIRE_BASE_URL,
+            )
+            # Compile standalone modules.
+            if REQUIRE_STANDALONE_MODULES:
+                shutil.copyfile(
+                    self._resource_path("almond.js"),
+                    env.compile_dir_path("almond.js"),
+                )
+            for standalone_module, standalone_config in REQUIRE_STANDALONE_MODULES.items():
+                if "out" in standalone_config:
+                    if "build_profile" in standalone_config:
+                        module_build_js_path = env.compile_dir_path(standalone_config["build_profile"])
+                    else:
+                        module_build_js_path = self._resource_path("module.build.js")
+                    self._run_optimizer(
+                        module_build_js_path,
+                        name = "almond",
+                        include = standalone_module,
+                        out = env.build_dir_path(standalone_config["out"]),
+                        baseUrl = os.path.join(env.compile_dir, REQUIRE_BASE_URL),
+                    )
+                else:
+                    raise ImproperlyConfigured(u"No 'out' option specified for module '{module}' in REQUIRE_STANDALONE_MODULES setting.".format(
+                        module = standalone_module
+                    ))
             # Compile the exclude patterns.
             exclude_patterns = [
                 re.compile(pattern)
                 for pattern
-                in self.EXCLUDE_PATTERNS + (re.escape(os.path.normpath(os.path.join(REQUIRE_BASE_URL, REQUIRE_BUILD_PROFILE))),)
+                in self.REQUIRE_EXCLUDE_PATTERNS + tuple(
+                    re.escape(os.path.normpath(os.path.join(REQUIRE_BASE_URL, js_exclude)))
+                    for js_exclude
+                    in (
+                        REQUIRE_BUILD_PROFILE,
+                        "almond.js",
+                    ) + tuple(
+                        standalone_config["build_profile"]
+                        for standalone_config
+                        in REQUIRE_STANDALONE_MODULES.values()
+                        if "build_profile" in standalone_config
+                    )
+                )
             ]
             # Update assets with modified ones.
-            if compiler_result == 0:
-                # Make a filesystem storage for passing to superclasses.
-                compiled_storage = FileSystemStorage(build_dir)
-                # Walk the compiled directory, checking for modified assets.
-                for build_dirpath, _, build_filenames in os.walk(build_dir):
-                    for build_filename in build_filenames:
-                        # Determine asset name.
-                        build_filepath = os.path.join(build_dirpath, build_filename)
-                        build_name = build_filepath[len(build_dir)+1:]
-                        build_storage_name = build_name.replace(os.sep, "/")
-                        # Ignore certain files.
-                        if any(pattern.match(build_name) for pattern in exclude_patterns):
-                            # Delete from storage, if originally present.
-                            if build_name in compile_info:
-                                del paths[build_storage_name]
-                                self.delete(build_storage_name)
-                            continue
-                        # Update the asset.
-                        with open(build_filepath, "rb") as build_handle:
-                            # Calculate asset hash.
-                            hash = hashlib.md5()
-                            for block in self._file_iter(build_handle):
-                                hash.update(block)
-                            build_handle.seek(0)
-                            # Check if the asset has been modifed.
-                            if build_name in compile_info:
-                                # Get the hash of the new file.
-                                if hash.digest() == compile_info[build_name]:
-                                    continue
-                            # If we're here, then the asset has been modified by the build script! Time to re-save it!
+            compiled_storage = FileSystemStorage(env.build_dir)
+            # Walk the compiled directory, checking for modified assets.
+            for build_dirpath, _, build_filenames in os.walk(env.build_dir):
+                for build_filename in build_filenames:
+                    # Determine asset name.
+                    build_filepath = os.path.join(build_dirpath, build_filename)
+                    build_name = build_filepath[len(env.build_dir)+1:]
+                    build_storage_name = build_name.replace(os.sep, "/")
+                    # Ignore certain files.
+                    if any(pattern.match(build_name) for pattern in exclude_patterns):
+                        # Delete from storage, if originally present.
+                        if build_name in compile_info:
+                            del paths[build_storage_name]
                             self.delete(build_storage_name)
-                            self.save(build_storage_name, File(build_handle, build_storage_name))
-                            # Report on the modified asset.
-                            paths[build_storage_name] = (compiled_storage, build_name)
-                            yield build_name, build_name, True
+                        continue
+                    # Update the asset.
+                    with open(build_filepath, "rb") as build_handle:
+                        # Calculate asset hash.
+                        hash = hashlib.md5()
+                        for block in self._file_iter(build_handle):
+                            hash.update(block)
+                        build_handle.seek(0)
+                        # Check if the asset has been modifed.
+                        if build_name in compile_info:
+                            # Get the hash of the new file.
+                            if hash.digest() == compile_info[build_name]:
+                                continue
+                        # If we're here, then the asset has been modified by the build script! Time to re-save it!
+                        self.delete(build_storage_name)
+                        self.save(build_storage_name, File(build_handle, build_storage_name))
+                        # Report on the modified asset.
+                        paths[build_storage_name] = (compiled_storage, build_name)
+                        yield build_name, build_name, True
             # Report on modified assets.
             super_class = super(OptimizedFilesMixin, self)
             if hasattr(super_class, "post_process"):
                 for path in super_class.post_process(paths, dry_run, **options):
                     yield path
-        finally:
-            # Clean up compile dirs.
-            shutil.rmtree(compile_dir, ignore_errors=True)
-            shutil.rmtree(build_dir, ignore_errors=True)
             
         
 class OptimizedStaticFilesStorage(OptimizedFilesMixin, StaticFilesStorage):

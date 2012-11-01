@@ -36,7 +36,7 @@ class Command(NoArgsCommand):
             ("require.js", REQUIRE_JS),
             ("app.build.js", REQUIRE_BUILD_PROFILE),
         ]
-        for _, standalone_config in REQUIRE_STANDALONE_MODULES.items():
+        for standalone_config in REQUIRE_STANDALONE_MODULES.values():
             if "build_profile" in standalone_config:
                 resources.append(("module.build.js", standalone_config["build_profile"]))
         # Check if the file exists.
