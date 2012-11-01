@@ -20,10 +20,14 @@ setup(
         "require.management",
         "require.management.commands",
         "require.templatetags",
+        "require.tests",
     ],
     package_data = {
         "require": [
             "resources/*.jar",
+            "resources/*.js",
+        ],
+        "require.tests": [
             "resources/*.js",
         ],
     },
