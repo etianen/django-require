@@ -10,6 +10,5 @@
 ({
     optimize: "closure",
     optimizeCss: "standard",
-    preserveLicenseComments: false,
     modules: []
 })

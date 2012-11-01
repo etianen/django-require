@@ -10,6 +10,5 @@
  */
 ({
     optimize: "closure",
-    preserveLicenseComments: false,
     wrap: true
 })
