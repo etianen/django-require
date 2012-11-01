@@ -1,4 +1,4 @@
 include require/resources/*.jar
 include require/resources/*.js
-#include LICENSE
-#include README.markdown
+include LICENSE
+include README.md
