@@ -79,6 +79,7 @@ class OptimizedStaticFilesStorageTest(WorkingDirMixin, TestCase):
     def setUp(self):
         super(OptimizedStaticFilesStorageTest, self).setUp()
         self.output_dir = self._make_working_dir()
+        self.resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources"))
         self.test_resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources"))
         os.mkdir(os.path.join(self.working_dir, "js"))
@@ -96,14 +97,29 @@ class OptimizedStaticFilesStorageTest(WorkingDirMixin, TestCase):
         )
     
     def testCollectStatic(self):
+        with self.settings(STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE=None):
+            call_command("collectstatic", interactive=False, verbosity=0)
+            
+    def testCollectStaticBuildProfile(self):
         shutil.copyfile(
             os.path.join(self.test_resources_dir, "app.build.js"),
             os.path.join(self.working_dir, "js", "app.build.js"),
         )
         with self.settings(STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE="app.build.js"):
             call_command("collectstatic", interactive=False, verbosity=0)
+            self.assertFalse(os.path.exists(os.path.join(self.output_dir, "js", "app.build.js")))
             
     def testCollectStaticStandalone(self):
         with self.settings(STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BUILD_PROFILE=None, REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js"}}):
             call_command("collectstatic", interactive=False, verbosity=0)
             self.assertTrue(os.path.exists(os.path.join(self.output_dir, "js", "main-built.js")))
+            
+    def testCollectStaticStandaloneBuildProfile(self):
+        shutil.copyfile(
+            os.path.join(self.resources_dir, "module.build.js"),
+            os.path.join(self.working_dir, "js", "main.build.js"),
+        )
+        with self.settings(STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BUILD_PROFILE=None, REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js", "build_profile": "main.build.js"}}):
+            call_command("collectstatic", interactive=False, verbosity=0)
+            self.assertTrue(os.path.exists(os.path.join(self.output_dir, "js", "main-built.js")))
+            self.assertFalse(os.path.exists(os.path.join(self.output_dir, "js", "main.build.js")))
