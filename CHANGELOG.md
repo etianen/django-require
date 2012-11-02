@@ -1,5 +1,5 @@
-django-reversion changelog
-==========================
+django-require changelog
+========================
 
 
 1.0.0 - 01/11/2012
