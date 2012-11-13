@@ -1,7 +1,7 @@
 import os.path, shutil
 from optparse import make_option
 
-from django.core.management.base import NoArgsCommand
+from django.core.management.base import NoArgsCommand, CommandError
 from django.conf import settings
 
 from require.conf import settings as require_settings
@@ -44,7 +44,10 @@ class Command(NoArgsCommand):
     
     def handle_noargs(self, **options):
         verbosity = int(options.get("verbosity", 1))
+        # Calculate the destination dir.
         dst_dir = options["dir"] or default_staticfiles_dir()
+        if not dst_dir:
+            raise CommandError("settings.STATICFILES_DIRS is empty, and no --dir option specified")
         # Calculate paths.
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources"))
         resources = [
