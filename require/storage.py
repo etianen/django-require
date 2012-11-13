@@ -31,7 +31,7 @@ class TemporaryCompileEnvironment(object):
     
     def run_optimizer(self, *args, **kwargs):
         # Configure the compiler.
-        if require_settings.REQUIRE_NODE:
+        if require_settings.REQUIRE_ENVIRONMENT == "node":
             compiler_args = self.node_args()
         else:
             compiler_args = self.java_args()
