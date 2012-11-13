@@ -27,5 +27,9 @@ class LazySettings(object):
     def REQUIRE_EXCLUDE(self):
         return getattr(django_settings, "REQUIRE_EXCLUDE", ("build.txt",))
     
+    @property
+    def REQUIRE_ENVIRONMENT(self):
+        return getattr(django_settings, "REQUIRE_ENVIRONMENT", "rhino")
+    
     
 settings = LazySettings()
