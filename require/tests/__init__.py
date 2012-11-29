@@ -37,8 +37,8 @@ class RequireInitTest(WorkingDirMixin, TestCase):
     
     def testCopyRequireRelative(self):
         with self.settings(STATICFILES_DIRS=(self.working_dir,), REQUIRE_JS="../require.js"):
-            call_command("require_init", verbosity=0)
-            self.assertTrue(os.path.exists(os.path.join(self.working_dir, require_settings.REQUIRE_BASE_URL, "..", "require.js")))
+            call_command("require_init", verbosity=2)
+            self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.working_dir, require_settings.REQUIRE_BASE_URL, "..", "require.js"))))
             
     def testCopyBuildProfile(self):
         build_profile = "app.build.js"
