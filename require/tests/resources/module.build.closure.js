@@ -1,39 +1,24 @@
 /**
- * Build profile for django-require.
+ * Build profile for a standalone django-require module, packaged with almond.js.
  * 
  * This supports all the normal configuration available to a r.js build profile. The only gotchas are:
  *
  *   - 'baseUrl' will be overidden by django-require during the build process.
- *   - 'appDir' will be overidden by django-require during the build process.
- *   - 'dir' will be overidden by django-require during the build process. 
+ *   - 'name' will be overidden by django-require during the build process.
+ *   - 'include' will be overidden by django-require during the build process.
+ *   - 'out' will be overidden by django-require during the build process. 
  */
 ({
     
     logLevel: 4,
     
     /*
-     * List the modules that will be optimized. All their immediate and deep
-     * dependencies will be included in the module's file when the build is
-     * done. A minimum module entry is {name: "module_name"}.
-     */
-    modules: [
-        {
-            name: "main"
-        }
-    ],
-
-    /*
-     * Allow CSS optimizations. Allowed values:
-     * - "standard": @import inlining, comment removal and line returns.
-     * Removing line returns may have problems in IE, depending on the type
-     * of CSS.
-     * - "standard.keepLines": Like "standard" but keeps line returns.
-     * - "none": Skip CSS optimizations.
-     * - "standard.keepComments": Keeps the file comments, but removes line returns.
-     * - "standard.keepComments.keepLines": Keeps the file comments and line returns.
-     */
-    optimizeCss: "standard",
-
+     * Wraps the module in an anonymous function to remove require() and define()
+     * from the global namespace. Set to false if you wish to use these functions
+     * outside of your standalone module.
+     */ 
+    wrap: true,
+    
     /*
      * How to optimize all the JS files in the build output directory.
      * Right now only the following values are supported:
@@ -43,7 +28,7 @@
      * mode to minify the code. Only available if REQUIRE_ENVIRONMENT is "rhino" (the default).
      * - "none": No minification will be done.
      */
-    optimize: "uglify",
+    optimize: "closure",
     
     /*
      * By default, comments that have a license in them are preserved in the
