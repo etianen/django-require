@@ -6,6 +6,7 @@ django-require changelog
 ------------------
 
 * Support for running the optimizer using node (much faster).
+* Updating to RequireJS 2.1.2 and almond 0.2.1
 * Better error message when no STATICFILES_DIRS are defined.
 
 
