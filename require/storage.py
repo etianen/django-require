@@ -112,17 +112,18 @@ class OptimizedFilesMixin(object):
                 # Store details of file.
                 compile_info[name] = hash.digest()
             # Run the optimizer.
-            if require_settings.REQUIRE_BUILD_PROFILE is not None:
-                app_build_js_path = env.compile_dir_path(require_settings.REQUIRE_BUILD_PROFILE)
-                exclude_names.append(resolve_require_url(require_settings.REQUIRE_BUILD_PROFILE))
-            else:
-                app_build_js_path = env.resource_path("app.build.js")
-            env.run_optimizer(
-                app_build_js_path,
-                dir = env.build_dir,
-                appDir = env.compile_dir,
-                baseUrl = require_settings.REQUIRE_BASE_URL,
-            )
+            if require_settings.REQUIRE_BUILD_PROFILE is not False:
+                if require_settings.REQUIRE_BUILD_PROFILE is not None:
+                    app_build_js_path = env.compile_dir_path(require_settings.REQUIRE_BUILD_PROFILE)
+                    exclude_names.append(resolve_require_url(require_settings.REQUIRE_BUILD_PROFILE))
+                else:
+                    app_build_js_path = env.resource_path("app.build.js")
+                env.run_optimizer(
+                    app_build_js_path,
+                    dir = env.build_dir,
+                    appDir = env.compile_dir,
+                    baseUrl = require_settings.REQUIRE_BASE_URL,
+                )
             # Compile standalone modules.
             if require_settings.REQUIRE_STANDALONE_MODULES:
                 shutil.copyfile(
