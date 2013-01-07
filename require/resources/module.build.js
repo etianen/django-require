@@ -26,7 +26,7 @@
      * mode to minify the code. Only available if REQUIRE_ENVIRONMENT is "rhino" (the default).
      * - "none": No minification will be done.
      */
-    optimize: "uglify",
+    optimize: "uglify2",
     
     /*
      * By default, comments that have a license in them are preserved in the
