@@ -53,6 +53,16 @@
      * This option will turn off the auto-preservation, but you will need
      * work out how best to surface the license information.
      */
-    preserveLicenseComments: true
+    preserveLicenseComments: true,
+    
+    /*
+     * The default behaviour is to optimize the build layers (the "modules"
+     * section of the config) and any other JS file in the directory. However, if
+     * the non-build layer JS files will not be loaded after a build, you can
+     * skip the optimization of those files, to speed up builds. Set this value
+     * to true if you want to skip optimizing those other non-build layer JS
+     * files.
+     */
+    skipDirOptimize: false
     
 })
