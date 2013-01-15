@@ -14,7 +14,7 @@ setup(
     author = "Dave Hall",
     author_email = "dave@etianen.com",
     url = "https://github.com/etianen/django-require",
-    download_url = "https://github.com/downloads/etianen/django-require/django-require-{}.tar.gz".format(version_str),
+    download_url = "https://github.com/downloads/etianen/django-require/django-require-{0}.tar.gz".format(version_str),
     packages = [
         "require",
         "require.management",
