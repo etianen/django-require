@@ -6,6 +6,7 @@ DEVELOPMENT
 -----------
 
 * Faster deploy of optimized files to remote filesystems when using CachedFilesMixin.
+* Not adding build profiles to REQUIRE_EXCLUDE during compilation, to speed up redeploys to remote filesystems.
 
 
 1.0.1 - 30/11/2012

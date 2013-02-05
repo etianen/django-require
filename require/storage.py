@@ -114,7 +114,6 @@ class OptimizedFilesMixin(object):
             # Run the optimizer.
             if require_settings.REQUIRE_BUILD_PROFILE is not None:
                 app_build_js_path = env.compile_dir_path(require_settings.REQUIRE_BUILD_PROFILE)
-                exclude_names.append(resolve_require_url(require_settings.REQUIRE_BUILD_PROFILE))
             else:
                 app_build_js_path = env.resource_path("app.build.js")
             env.run_optimizer(
@@ -134,7 +133,6 @@ class OptimizedFilesMixin(object):
                 if "out" in standalone_config:
                     if "build_profile" in standalone_config:
                         module_build_js_path = env.compile_dir_path(standalone_config["build_profile"])
-                        exclude_names.append(resolve_require_url(standalone_config["build_profile"]))
                     else:
                         module_build_js_path = env.resource_path("module.build.js")
                     env.run_optimizer(
