@@ -2,6 +2,12 @@ django-require changelog
 ========================
 
 
+DEVELOPMENT
+-----------
+
+* Faster deploy of optimized files to remote filesystems when using CachedFilesMixin.
+
+
 1.0.1 - 30/11/2012
 ------------------
 

@@ -165,7 +165,7 @@ class OptimizedFilesMixin(object):
                             self.delete(build_storage_name)
                         continue
                     # Update the asset.
-                    with open(build_filepath, "rb") as build_handle:
+                    with File(open(build_filepath, "rb"), build_storage_name) as build_handle:
                         # Calculate asset hash.
                         hash = hashlib.md5()
                         for block in self._file_iter(build_handle):
@@ -177,10 +177,19 @@ class OptimizedFilesMixin(object):
                             if hash.digest() == compile_info[build_name]:
                                 continue
                         # If we're here, then the asset has been modified by the build script! Time to re-save it!
-                        self.delete(build_storage_name)
-                        self.save(build_storage_name, File(build_handle, build_storage_name))
-                        # Report on the modified asset.
                         paths[build_storage_name] = (compiled_storage, build_name)
+                        # But first... if this storage hashes names, we can save ourselves some time by checking first.
+                        if hasattr(self, "hashed_name"):
+                            hashed_name = self.hashed_name(build_name, build_handle)
+                            if self.exists(hashed_name):
+                                continue
+                            # We're still here, so the hashed name doesn't exist. Reset the file, and go on to save.
+                            if hasattr(build_handle, "seek"):
+                                build_handle.seek(0)
+                        # It's definitely time to save this file.
+                        self.delete(build_storage_name)
+                        self.save(build_storage_name, build_handle)
+                        # Report on the modified asset.
                         yield build_name, build_name, True
             # Report on modified assets.
             super_class = super(OptimizedFilesMixin, self)
