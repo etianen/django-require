@@ -176,14 +176,6 @@ class OptimizedFilesMixin(object):
                                 continue
                         # If we're here, then the asset has been modified by the build script! Time to re-save it!
                         paths[build_storage_name] = (compiled_storage, build_name)
-                        # But first... if this storage hashes names, we can save ourselves some time by checking first.
-                        if hasattr(self, "hashed_name"):
-                            hashed_name = self.hashed_name(build_name, build_handle)
-                            if self.exists(hashed_name):
-                                continue
-                            # We're still here, so the hashed name doesn't exist. Reset the file, and go on to save.
-                            if hasattr(build_handle, "seek"):
-                                build_handle.seek(0)
                         # It's definitely time to save this file.
                         self.delete(build_storage_name)
                         self.save(build_storage_name, build_handle)
