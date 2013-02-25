@@ -121,7 +121,6 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
         )
         with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE="app.build.js"):
             call_command("collectstatic", interactive=False, verbosity=0)
-            self.assertFalse(os.path.exists(os.path.join(self.output_dir, "js", "app.build.js")))
             
     def testCollectStaticStandalone(self):
         with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BUILD_PROFILE=None, REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js"}}):
@@ -136,7 +135,6 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
         with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BUILD_PROFILE=None, REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js", "build_profile": "main.build.js"}}):
             call_command("collectstatic", interactive=False, verbosity=0)
             self.assertTrue(os.path.exists(os.path.join(self.output_dir, "js", "main-built.js")))
-            self.assertFalse(os.path.exists(os.path.join(self.output_dir, "js", "main.build.js")))
             
 
 class OptimizedStaticFilesStorageNodeTest(OptimizedStaticFilesStorageTestsMixin, TestCase):
