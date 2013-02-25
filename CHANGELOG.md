@@ -2,11 +2,15 @@ django-require changelog
 ========================
 
 
-DEVELOPMENT
------------
+1.0.2 - 25/02/2012
+------------------
 
-* Faster deploy of optimized files to remote filesystems when using CachedFilesMixin.
 * Not adding build profiles to REQUIRE_EXCLUDE during compilation, to speed up redeploys to remote filesystems.
+* Updating requirejs to 2.1.4
+* Updating almond to 0.2.5
+* Updating closure compiler to r2388 
+* Updating rhino to 1.7R4.
+
 
 
 1.0.1 - 30/11/2012
