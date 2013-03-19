@@ -31,12 +31,15 @@ class TemporaryCompileEnvironment(object):
     
     def run_optimizer(self, *args, **kwargs):
         # Configure the compiler.
-        if require_settings.REQUIRE_ENVIRONMENT == "node":
+        if require_settings.REQUIRE_ENVIRONMENT_ARGS is not None:
+            compiler_args = require_settings.REQUIRE_ENVIRONMENT_ARGS
+        elif require_settings.REQUIRE_ENVIRONMENT == "node":
             compiler_args = self.node_args()
         elif require_settings.REQUIRE_ENVIRONMENT == "rhino":
             compiler_args = self.java_args()
         else:
-            raise ImproperlyConfigured("The REQUIRE_ENVIRONMENT setting should be either 'rhino' or 'node'")
+            raise ImproperlyConfigured("Define REQUIRE_ENVIRONMENT_ARGS or "
+                    "REQUIRE_ENVIRONMENT setting with either 'rhino' or 'node'")
         compiler_args.extend([self.resource_path("r.js"), "-o"])
         compiler_args.extend(args)
         if self.verbosity == 0:

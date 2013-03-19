@@ -31,5 +31,8 @@ class LazySettings(object):
     def REQUIRE_ENVIRONMENT(self):
         return getattr(django_settings, "REQUIRE_ENVIRONMENT", "rhino")
     
+    @property
+    def REQUIRE_ENVIRONMENT_ARGS(self):
+        return getattr(django_settings, "REQUIRE_ENVIRONMENT_ARGS", None)
     
 settings = LazySettings()
