@@ -32,7 +32,7 @@ class TemporaryCompileEnvironment(object):
     def run_optimizer(self, *args, **kwargs):
         # Configure the compiler.
         if require_settings.REQUIRE_ENVIRONMENT_ARGS is not None:
-            compiler_args = require_settings.REQUIRE_ENVIRONMENT_ARGS
+            compiler_args = require_settings.REQUIRE_ENVIRONMENT_ARGS[:]
         elif require_settings.REQUIRE_ENVIRONMENT == "node":
             compiler_args = self.node_args()
         elif require_settings.REQUIRE_ENVIRONMENT == "rhino":
