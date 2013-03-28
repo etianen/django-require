@@ -1,3 +1,8 @@
+from subprocess import Popen
+import os
+
+from django.utils.functional import cached_property
+
 from require.conf import settings as require_settings
 from require.helpers import import_module_attr
 
@@ -18,12 +23,6 @@ class Environment(object):
         raise NotImplementedError()
 
 
-class AutoEnvironment(Environment):
-    def args(self):
-        environment = RhinoEnvironment(self.env)
-        return environment.args()
-
-
 class NodeEnvironment(Environment):
     def args(self):
         # Start of the command to run the compiler in Node.
@@ -34,7 +33,7 @@ class RhinoEnvironment(Environment):
     def args(self):
         # Start of the command to run the compiler in Java.
         return [
-            "java",
+            "javas",
             "-classpath",
             ":".join((
                 self.env.resource_path("js.jar"),
@@ -42,3 +41,27 @@ class RhinoEnvironment(Environment):
             )),
             "org.mozilla.javascript.tools.shell.Main"
         ]
+
+
+class AutoEnvironment(Environment):
+    environments = [NodeEnvironment, RhinoEnvironment]
+
+    @cached_property
+    def environment(self):
+        devnull = open(os.devnull)
+        for environment in self.environments:
+            environment = environment(self.env)
+            args = environment.args()[:1]
+            try:
+                Popen(args, stdout=devnull, stderr=devnull).communicate()
+            except OSError as e:
+                if e.errno != os.errno.ENOENT:
+                    raise
+            else:
+                return environment
+
+        raise EnvironmentError("no environments detected: {envs}".format(
+            envs=', '.join([ str(env) for env in self.environments ])))
+
+    def args(self):
+        return self.environment.args()
