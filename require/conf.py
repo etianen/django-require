@@ -28,15 +28,15 @@ class LazySettings(object):
         return getattr(django_settings, "REQUIRE_EXCLUDE", ("build.txt",))
     
     @property
-    def REQUIRE_BACKEND(self):
-        return getattr(django_settings, "REQUIRE_BACKEND", "auto")
+    def REQUIRE_ENVIRONMENT(self):
+        return getattr(django_settings, "REQUIRE_ENVIRONMENT", "auto")
     
     @property
-    def REQUIRE_BACKEND_ALIASES(self):
-        return getattr(django_settings, "REQUIRE_BACKEND_ALIASES", {
-            'auto': 'require.backends.AutoBackend',
-            'node': 'require.backends.NodeBackend',
-            'rhino': 'require.backends.RhinoBackend',
+    def REQUIRE_ENVIRONMENT_ALIASES(self):
+        return getattr(django_settings, "REQUIRE_ENVIRONMENT_ALIASES", {
+            'auto': 'require.environments.AutoEnvironment',
+            'node': 'require.environments.NodeEnvironment',
+            'rhino': 'require.environments.RhinoEnvironment',
             })
     
 settings = LazySettings()

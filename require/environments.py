@@ -2,15 +2,15 @@ from require.conf import settings as require_settings
 from require.helpers import import_module_attr
 
 
-def load_backend():
-    backend = require_settings.REQUIRE_BACKEND
-    aliases = require_settings.REQUIRE_BACKEND_ALIASES
-    backend = aliases.get(backend, backend)
-    backend = import_module_attr(backend)
-    return backend
+def load_environment():
+    environment = require_settings.REQUIRE_ENVIRONMENT
+    aliases = require_settings.REQUIRE_ENVIRONMENT_ALIASES
+    environment = aliases.get(environment, environment)
+    environment = import_module_attr(environment)
+    return environment
 
 
-class Backend(object):
+class Environment(object):
     def __init__(self, environment):
         self.env = environment
 
@@ -18,19 +18,19 @@ class Backend(object):
         raise NotImplementedError()
 
 
-class AutoBackend(Backend):
+class AutoEnvironment(Environment):
     def args(self):
-        backend = RhinoBackend(self.env)
-        return backend.args()
+        environment = RhinoEnvironment(self.env)
+        return environment.args()
 
 
-class NodeBackend(Backend):
+class NodeEnvironment(Environment):
     def args(self):
         # Start of the command to run the compiler in Node.
         return ["node"]
 
 
-class RhinoBackend(Backend):
+class RhinoEnvironment(Environment):
     def args(self):
         # Start of the command to run the compiler in Java.
         return [

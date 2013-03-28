@@ -9,7 +9,7 @@ from django.contrib.staticfiles.storage import StaticFilesStorage, CachedStaticF
 
 from require.conf import settings as require_settings
 from require.helpers import resolve_require_url
-from require.backends import load_backend
+from require.environments import load_environment
 
 
 class TemporaryCompileEnvironment(object):
@@ -31,8 +31,8 @@ class TemporaryCompileEnvironment(object):
         return os.path.abspath(os.path.join(self.build_dir, require_settings.REQUIRE_BASE_URL, name))
     
     def run_optimizer(self, *args, **kwargs):
-        # load the backend and initialize it with the environment
-        compiler = load_backend()(self)
+        # load the environment and initialize
+        compiler = load_environment()(self)
         compiler_args = compiler.args()
         compiler_args.extend([self.resource_path("r.js"), "-o"])
         compiler_args.extend(args)
