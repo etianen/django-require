@@ -9,6 +9,7 @@ from django.contrib.staticfiles.storage import StaticFilesStorage, CachedStaticF
 
 from require.conf import settings as require_settings
 from require.helpers import resolve_require_url
+from require.environments import load_environment
 
 
 class TemporaryCompileEnvironment(object):
@@ -30,13 +31,9 @@ class TemporaryCompileEnvironment(object):
         return os.path.abspath(os.path.join(self.build_dir, require_settings.REQUIRE_BASE_URL, name))
     
     def run_optimizer(self, *args, **kwargs):
-        # Configure the compiler.
-        if require_settings.REQUIRE_ENVIRONMENT == "node":
-            compiler_args = self.node_args()
-        elif require_settings.REQUIRE_ENVIRONMENT == "rhino":
-            compiler_args = self.java_args()
-        else:
-            raise ImproperlyConfigured("The REQUIRE_ENVIRONMENT setting should be either 'rhino' or 'node'")
+        # load the environment and initialize
+        compiler = load_environment()(self)
+        compiler_args = compiler.args()
         compiler_args.extend([self.resource_path("r.js"), "-o"])
         compiler_args.extend(args)
         if self.verbosity == 0:
@@ -51,22 +48,6 @@ class TemporaryCompileEnvironment(object):
         # Run the compiler in a subprocess.
         if subprocess.call(compiler_args) != 0:
             raise OptimizationError("Error while running r.js optimizer.")
-    
-    def java_args(self):
-        # Start of the command to run the compiler in Java.
-        return [
-            "java",
-            "-classpath",
-            ":".join((
-                self.resource_path("js.jar"),
-                self.resource_path("compiler.jar"),
-            )),
-            "org.mozilla.javascript.tools.shell.Main"
-        ]
-    
-    def node_args(self, *args, **kwargs):
-        # Start of the command to run the compiler in Node.
-        return ["node"]
     
     def __enter__(self):
         return self
