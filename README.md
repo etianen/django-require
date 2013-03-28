@@ -52,8 +52,10 @@ REQUIRE_DEBUG = settings.DEBUG
 # A tuple of files to exclude from the compilation result of r.js.
 REQUIRE_EXCLUDE = ("build.txt",)
 
-# The execution environment in which to run r.js: node or rhino.
-REQUIRE_ENVIRONMENT = "rhino"
+# The execution environment in which to run r.js: auto, node or rhino.
+# auto will autodetect the environment and make use of node if available and rhino if not.
+# It can also be a path to a custom class that subclasses require.environments.Environment and defines some "args" function that returns a list with the command arguments to execute.
+REQUIRE_ENVIRONMENT = "auto"
 ```
 
 
