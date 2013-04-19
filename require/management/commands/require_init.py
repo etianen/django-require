@@ -48,6 +48,9 @@ class Command(NoArgsCommand):
         dst_dir = options["dir"] or default_staticfiles_dir()
         if not dst_dir:
             raise CommandError("settings.STATICFILES_DIRS is empty, and no --dir option specified")
+        # Handle destination directory tuples.
+        if isinstance(dst_dir, (list, tuple)):
+            dst_dir = dst_dir[1]  # Could do something more intelligent here with matching prefixes, but is it worth it?
         # Calculate paths.
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "resources"))
         resources = [
