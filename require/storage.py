@@ -80,7 +80,7 @@ class OptimizedFilesMixin(object):
             # Copy all assets into the compile dir. 
             for name, storage_details in paths.items():
                 storage, path = storage_details
-                dst_path = os.path.join(env.compile_dir, path)
+                dst_path = os.path.join(env.compile_dir, name)
                 dst_dir = os.path.dirname(dst_path)
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
