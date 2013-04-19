@@ -33,7 +33,7 @@ class RhinoEnvironment(Environment):
     def args(self):
         # Start of the command to run the compiler in Java.
         return [
-            "javas",
+            "java",
             "-classpath",
             ":".join((
                 self.env.resource_path("js.jar"),
