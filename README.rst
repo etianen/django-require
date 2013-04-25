@@ -16,7 +16,8 @@ Installation
 ------------
 
 1. Checkout the latest django-require release and copy or symlink the
-   ``require`` directory into your ``PYTHONPATH``.
+   ``require`` directory into your ``PYTHONPATH``.  If using pip, run 
+   ``pip install django-require``.
 2. Add ``'require'`` to your ``INSTALLED_APPS`` setting.
 3. Set your ``STATICFILES_STORAGE`` setting to
    ``'require.storage.OptimizedStaticFilesStorage'`` or
