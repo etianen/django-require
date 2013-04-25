@@ -7,6 +7,7 @@ django-require changelog
 
 * Added ability to specify custom compiler environments, either by class name or alias.
 * Added default 'auto' environment alias, which uses 'node' if available, else 'rhino'.
+* Updating requirejs to 2.1.4
 
 
 1.0.2 - 25/02/2012
