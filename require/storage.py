@@ -13,23 +13,23 @@ from require.environments import load_environment
 
 
 class TemporaryCompileEnvironment(object):
-    
+
     REQUIRE_RESOURCES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
-    
+
     def __init__(self, verbosity):
         self.compile_dir = tempfile.mkdtemp()
         self.build_dir = tempfile.mkdtemp()
         self.verbosity = verbosity
-    
+
     def resource_path(self, name):
         return os.path.join(self.REQUIRE_RESOURCES_DIR, name)
-    
+
     def compile_dir_path(self, name):
         return os.path.abspath(os.path.join(self.compile_dir, require_settings.REQUIRE_BASE_URL, name))
-    
+
     def build_dir_path(self, name):
         return os.path.abspath(os.path.join(self.build_dir, require_settings.REQUIRE_BASE_URL, name))
-    
+
     def run_optimizer(self, *args, **kwargs):
         # load the environment and initialize
         compiler = load_environment()(self)
@@ -39,7 +39,7 @@ class TemporaryCompileEnvironment(object):
         if self.verbosity == 0:
             kwargs.setdefault("logLevel", "4")
         compiler_args.extend(
-            "{}={}".format(
+            "{0}={1}".format(
                 key, value
             )
             for key, value
@@ -48,27 +48,27 @@ class TemporaryCompileEnvironment(object):
         # Run the compiler in a subprocess.
         if subprocess.call(compiler_args) != 0:
             raise OptimizationError("Error while running r.js optimizer.")
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, *args):
         shutil.rmtree(self.compile_dir, ignore_errors=True)
         shutil.rmtree(self.build_dir, ignore_errors=True)
 
 
 class OptimizationError(Exception):
-    
+
     pass
 
 
 class OptimizedFilesMixin(object):
-    
+
     REQUIRE_COPY_BLOCK_SIZE = 1024*1024  # 1 MB.
-    
+
     def _file_iter(self, handle):
         return iter(partial(handle.read, self.REQUIRE_COPY_BLOCK_SIZE), "")
-    
+
     def post_process(self, paths, dry_run=False, verbosity=1, **options):
         # If this is a dry run, give up now!
         if dry_run:
@@ -77,7 +77,7 @@ class OptimizedFilesMixin(object):
         with TemporaryCompileEnvironment(verbosity=verbosity) as env:
             exclude_names = list(require_settings.REQUIRE_EXCLUDE)
             compile_info = {}
-            # Copy all assets into the compile dir. 
+            # Copy all assets into the compile dir.
             for name, storage_details in paths.items():
                 storage, path = storage_details
                 dst_path = os.path.join(env.compile_dir, name)
@@ -86,10 +86,11 @@ class OptimizedFilesMixin(object):
                     os.makedirs(dst_dir)
                 # Copy and generate md5
                 hash = hashlib.md5()
-                with closing(storage.open(path, "rb")) as src_handle, open(dst_path, "wb") as dst_handle:
-                    for block in self._file_iter(src_handle):
-                        hash.update(block)
-                        dst_handle.write(block)
+                with closing(storage.open(path, "rb")) as src_handle:
+                    with open(dst_path, "wb") as dst_handle:
+                        for block in self._file_iter(src_handle):
+                            hash.update(block)
+                            dst_handle.write(block)
                 # Store details of file.
                 compile_info[name] = hash.digest()
             # Run the optimizer.
@@ -167,13 +168,13 @@ class OptimizedFilesMixin(object):
             if hasattr(super_class, "post_process"):
                 for path in super_class.post_process(paths, dry_run, **options):
                     yield path
-            
-        
+
+
 class OptimizedStaticFilesStorage(OptimizedFilesMixin, StaticFilesStorage):
-    
+
     pass
 
 
 class OptimizedCachedStaticFilesStorage(OptimizedFilesMixin, CachedStaticFilesStorage):
-    
+
     pass
