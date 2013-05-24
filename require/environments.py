@@ -1,5 +1,4 @@
-from subprocess import Popen
-import os
+from distutils.spawn import find_executable
 
 from django.utils.functional import cached_property
 
@@ -48,16 +47,10 @@ class AutoEnvironment(Environment):
 
     @cached_property
     def environment(self):
-        devnull = open(os.devnull)
         for environment in self.environments:
             environment = environment(self.env)
-            args = environment.args()[:1]
-            try:
-                Popen(args, stdout=devnull, stderr=devnull).communicate()
-            except OSError as e:
-                if e.errno != os.errno.ENOENT:
-                    raise
-            else:
+            executable = environment.args()[0]
+            if find_executable(executable):
                 return environment
 
         raise EnvironmentError("no environments detected: {envs}".format(
