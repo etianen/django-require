@@ -3,6 +3,7 @@ from django.conf import settings as django_settings
 
 class LazySettings(object):
     
+    
     @property
     def REQUIRE_BASE_URL(self):
         return getattr(django_settings, "REQUIRE_BASE_URL", "js")
@@ -10,6 +11,10 @@ class LazySettings(object):
     @property
     def REQUIRE_BUILD_PROFILE(self):
         return getattr(django_settings, "REQUIRE_BUILD_PROFILE", None)
+
+    @property
+    def REQUIRE_CACHE_BUSTING_STR(self):
+        return getattr(django_settings, "REQUIRE_CACHE_BUSTING_STR", "")
     
     @property
     def REQUIRE_JS(self):
