@@ -2,7 +2,15 @@ django-require changelog
 ========================
 
 
-1.0.3 - 25/04/2012
+1.0.4 - 27/07/2013
+------------------
+
+* Updating requirejs to 2.1.8
+* Updating r.js to 2.1.8
+* Updating closure compiler.
+
+
+1.0.3 - 25/04/2013
 ------------------
 
 * Added ability to specify custom compiler environments, either by class name or alias.
@@ -11,7 +19,7 @@ django-require changelog
 * Updating closure compiler.
 
 
-1.0.2 - 25/02/2012
+1.0.2 - 25/02/2013
 ------------------
 
 * Not adding build profiles to REQUIRE_EXCLUDE during compilation, to speed up redeploys to remote filesystems.
