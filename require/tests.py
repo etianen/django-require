@@ -1,11 +1,50 @@
 import tempfile, shutil, os.path, subprocess, unittest
 
+from django.conf import settings
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.contrib.staticfiles.finders import FileSystemFinder
 from django.core.management import call_command
 from django.test import TestCase
 
 from require.conf import settings as require_settings
+from require.storage import OptimizedStaticFilesStorage
 from require.templatetags.require import require_module
+
+
+class TestableFileSystemFinder(FileSystemFinder):
+    
+    """
+    This finder re-inits at the start of each method, allowing the STATICFILES_DIRS
+    settings to be overridden at runtime.
+    """
+    
+    def find(self, *args, **kwargs):
+        self.__init__()
+        return super(TestableFileSystemFinder, self).find(*args, **kwargs)
+
+    def find_location(self, *args, **kwargs):
+        self.__init__()
+        return super(TestableFileSystemFinder, self).find_location(*args, **kwargs)
+
+    def list(self, *args, **kwargs):
+        self.__init__()
+        return super(TestableFileSystemFinder, self).list(*args, **kwargs)
+
+
+class TestableOptimizedStaticFilesStorage(OptimizedStaticFilesStorage):
+    
+    """
+    The location property for this storage is dynamically looked up from
+    the django settings object, allowing it to be overridden at runtime.
+    """
+    
+    @property
+    def location(self):
+        return settings.STATIC_ROOT
+    
+    @location.setter
+    def location(self, value):
+        pass
 
 
 class WorkingDirMixin(object):
@@ -94,8 +133,8 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
     def setUp(self):
         super(OptimizedStaticFilesStorageTestsMixin, self).setUp()
         self.output_dir = self._make_working_dir()
-        self.test_resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
-        resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "resources"))
+        self.test_resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources", "tests"))
+        resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
         os.mkdir(os.path.join(self.working_dir, "js"))
         shutil.copyfile(
             os.path.join(resources_dir, "require.js"),
@@ -111,7 +150,7 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
         )
 
     def testCollectStatic(self):
-        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE=None):
+        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE=None):
             call_command("collectstatic", interactive=False, verbosity=0)
 
     def testCollectStaticBuildProfile(self):
@@ -119,11 +158,11 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
             os.path.join(self.test_resources_dir, self.test_build_profile),
             os.path.join(self.working_dir, "js", "app.build.js"),
         )
-        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE="app.build.js"):
+        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE="app.build.js"):
             call_command("collectstatic", interactive=False, verbosity=0)
 
     def testCollectStaticStandalone(self):
-        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BUILD_PROFILE=None, REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js"}}):
+        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BUILD_PROFILE=None, REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js"}}):
             call_command("collectstatic", interactive=False, verbosity=0)
             self.assertTrue(os.path.exists(os.path.join(self.output_dir, "js", "main-built.js")))
 
@@ -132,7 +171,7 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
             os.path.join(self.test_resources_dir, self.test_standalone_build_profile),
             os.path.join(self.working_dir, "js", "main.build.js"),
         )
-        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.finders.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.storage.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BUILD_PROFILE=None, REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js", "build_profile": "main.build.js"}}):
+        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment, STATICFILES_FINDERS=("require.tests.TestableFileSystemFinder",), STATICFILES_DIRS=(self.working_dir,), STATIC_ROOT=self.output_dir, STATICFILES_STORAGE="require.tests.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BUILD_PROFILE=None, REQUIRE_BASE_URL="js", REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js", "build_profile": "main.build.js"}}):
             call_command("collectstatic", interactive=False, verbosity=0)
             self.assertTrue(os.path.exists(os.path.join(self.output_dir, "js", "main-built.js")))
 
