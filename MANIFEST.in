@@ -1,5 +1,5 @@
 include require/resources/*.jar
 include require/resources/*.js
-include require/tests/resources/*.js
+include require/resources/tests/*.js
 include LICENSE
 include README.rst
