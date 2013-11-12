@@ -9,6 +9,7 @@ django-require changelog
 * Updating r.js to 2.1.9
 * Updating almond to 0.2.6
 * Updating closure compiler.
+* Restructures tests to work with Django 1.6.
 
 
 1.0.4 - 27/07/2013
