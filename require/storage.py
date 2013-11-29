@@ -69,7 +69,7 @@ class OptimizedFilesMixin(object):
     REQUIRE_COPY_BLOCK_SIZE = 1024*1024  # 1 MB.
 
     def _file_iter(self, handle):
-        return iter(partial(handle.read, self.REQUIRE_COPY_BLOCK_SIZE), "")
+        return iter(partial(handle.read, self.REQUIRE_COPY_BLOCK_SIZE), b'')
 
     def post_process(self, paths, dry_run=False, verbosity=1, **options):
         # If this is a dry run, give up now!
