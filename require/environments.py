@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from distutils.spawn import find_executable
 
 from django.utils.functional import cached_property

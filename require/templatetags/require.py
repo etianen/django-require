@@ -21,10 +21,10 @@ def require_module(module):
     for extra load performance.
     """
     if not require_settings.REQUIRE_DEBUG and module in require_settings.REQUIRE_STANDALONE_MODULES:
-        return u"""<script src="{module}"></script>""".format(
+        return """<script src="{module}"></script>""".format(
             module = staticfiles_storage.url(resolve_require_module(require_settings.REQUIRE_STANDALONE_MODULES[module]["out"])),
         )
-    return u"""<script src="{src}" data-main="{module}"></script>""".format(
+    return """<script src="{src}" data-main="{module}"></script>""".format(
         src = staticfiles_storage.url(resolve_require_url(require_settings.REQUIRE_JS)),
         module = staticfiles_storage.url(resolve_require_module(module)),
     )

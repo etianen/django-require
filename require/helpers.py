@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import posixpath
 from django.utils.importlib import import_module
 

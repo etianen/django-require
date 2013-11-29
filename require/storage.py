@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import tempfile, shutil, os.path, hashlib, subprocess
 from functools import partial
 from contextlib import closing
@@ -125,7 +127,7 @@ class OptimizedFilesMixin(object):
                         baseUrl = os.path.join(env.compile_dir, require_settings.REQUIRE_BASE_URL),
                     )
                 else:
-                    raise ImproperlyConfigured(u"No 'out' option specified for module '{module}' in REQUIRE_STANDALONE_MODULES setting.".format(
+                    raise ImproperlyConfigured("No 'out' option specified for module '{module}' in REQUIRE_STANDALONE_MODULES setting.".format(
                         module = standalone_module
                     ))
             # Update assets with modified ones.

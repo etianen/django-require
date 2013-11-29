@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import tempfile, shutil, os.path, subprocess, unittest
 
 from django.conf import settings
