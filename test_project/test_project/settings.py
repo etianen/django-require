@@ -39,6 +39,8 @@ INSTALLED_APPS = (
     'require',
 )
 
+STATICFILES_STORAGE = "require.storage.OptimizedStaticFilesStorage"
+
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
