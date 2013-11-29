@@ -6,6 +6,7 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
+from django.conf import settings
 
 from require.conf import settings as require_settings
 from require.templatetags.require import require_module
@@ -126,7 +127,7 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
     def testCollectStaticStandalone(self):
         with self.settings(REQUIRE_ENVIRONMENT=self.require_environment):
             call_command("collectstatic", interactive=False, verbosity=0)
-            self.assertTrue(os.path.exists(os.path.join(OUTPUT_DIR, "js", "main-built.js")))
+            self.assertTrue(os.path.exists(staticfiles_storage.path("js/main-built.js")))
 
     @override_settings(REQUIRE_BUILD_PROFILE=None, REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js", "build_profile": "main.build.js"}})
     def testCollectStaticStandaloneBuildProfile(self):
@@ -136,7 +137,7 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
         )
         with self.settings(REQUIRE_ENVIRONMENT=self.require_environment):
             call_command("collectstatic", interactive=False, verbosity=0)
-            self.assertTrue(os.path.exists(os.path.join(OUTPUT_DIR, "js", "main-built.js")))
+            self.assertTrue(os.path.exists(staticfiles_storage.path("js/main-built.js")))
 
 
 @override_settings(STATICFILES_FINDERS=("django.contrib.staticfiles.finders.FileSystemFinder",), STATICFILES_DIRS=(WORKING_DIR,), STATIC_ROOT=OUTPUT_DIR, STATICFILES_STORAGE="require.storage.OptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js")
