@@ -10,6 +10,6 @@ env:
 install:
   - pip install $DJANGO
   - python setup.py -q install
-script: cd test_project && python manage.py test require
+script: cd test_project && python manage.py test require -v 2
 notifications:
   email: false
