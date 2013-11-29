@@ -2,52 +2,13 @@ from __future__ import unicode_literals
 
 import tempfile, shutil, os.path, subprocess, unittest
 
-from django.conf import settings
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.contrib.staticfiles.finders import FileSystemFinder
 from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
 
 from require.conf import settings as require_settings
-from require.storage import OptimizedStaticFilesStorage
 from require.templatetags.require import require_module
-
-
-class TestableFileSystemFinder(FileSystemFinder):
-    
-    """
-    This finder re-inits at the start of each method, allowing the STATICFILES_DIRS
-    settings to be overridden at runtime.
-    """
-    
-    def find(self, *args, **kwargs):
-        self.__init__()
-        return super(TestableFileSystemFinder, self).find(*args, **kwargs)
-
-    def find_location(self, *args, **kwargs):
-        self.__init__()
-        return super(TestableFileSystemFinder, self).find_location(*args, **kwargs)
-
-    def list(self, *args, **kwargs):
-        self.__init__()
-        return super(TestableFileSystemFinder, self).list(*args, **kwargs)
-
-
-class TestableOptimizedStaticFilesStorage(OptimizedStaticFilesStorage):
-    
-    """
-    The location property for this storage is dynamically looked up from
-    the django settings object, allowing it to be overridden at runtime.
-    """
-    
-    @property
-    def location(self):
-        return settings.STATIC_ROOT
-    
-    @location.setter
-    def location(self, value):
-        pass
 
 
 WORKING_DIR = tempfile.mkdtemp()
@@ -108,7 +69,6 @@ class RequireModuleTest(TestCase):
         ))
 
 
-@override_settings(STATICFILES_FINDERS=("require.tests.TestableFileSystemFinder",), STATICFILES_DIRS=(WORKING_DIR,), STATIC_ROOT=OUTPUT_DIR, STATICFILES_STORAGE="require.tests.TestableOptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js")
 class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
 
     def __init__(self, *args, **kwargs):
@@ -175,6 +135,7 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
             self.assertTrue(os.path.exists(os.path.join(self.output_dir, "js", "main-built.js")))
 
 
+@override_settings(STATICFILES_FINDERS=("django.contrib.staticfiles.finders.FileSystemFinder",), STATICFILES_DIRS=(WORKING_DIR,), STATIC_ROOT=OUTPUT_DIR, STATICFILES_STORAGE="require.storage.OptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js")
 class OptimizedStaticFilesStorageNodeTest(OptimizedStaticFilesStorageTestsMixin, TestCase):
 
     require_environment_detection_args = ("node", "-v")
@@ -186,6 +147,7 @@ class OptimizedStaticFilesStorageNodeTest(OptimizedStaticFilesStorageTestsMixin,
     test_standalone_build_profile = "module.build.js"
 
 
+@override_settings(STATICFILES_FINDERS=("django.contrib.staticfiles.finders.FileSystemFinder",), STATICFILES_DIRS=(WORKING_DIR,), STATIC_ROOT=OUTPUT_DIR, STATICFILES_STORAGE="require.storage.OptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js")
 class OptimizedStaticFilesStorageRhinoTest(OptimizedStaticFilesStorageTestsMixin, TestCase):
 
     require_environment_detection_args = ("java", "-version")
