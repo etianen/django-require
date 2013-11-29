@@ -19,9 +19,13 @@ class WorkingDirMixin(object):
 
     def tearDown(self):
         for working_dir in (WORKING_DIR, OUTPUT_DIR):
-            for path in os.listdir(working_dir):
-                os.remove(os.path.join(working_dir, path))
-            assert len(os.listdir(working_dir), 0)
+            for name in os.listdir(working_dir):
+                path = os.path.join(working_dir, name)
+                if os.path.isdir(path):
+                    shutil.rmtree(path)
+                else:
+                    os.remove(path)
+            assert len(os.listdir(working_dir)) == 0
 
 
 class RequireInitTest(WorkingDirMixin, TestCase):
@@ -29,27 +33,27 @@ class RequireInitTest(WorkingDirMixin, TestCase):
     @override_settings(STATICFILES_DIRS=(WORKING_DIR,), REQUIRE_JS="require.js")
     def testCopyRequire(self):
         call_command("require_init", verbosity=0)
-        self.assertTrue(os.path.exists(os.path.join(self.working_dir, require_settings.REQUIRE_BASE_URL, "require.js")))
+        self.assertTrue(os.path.exists(os.path.join(WORKING_DIR, require_settings.REQUIRE_BASE_URL, "require.js")))
 
     @override_settings(STATICFILES_DIRS=(WORKING_DIR,), REQUIRE_JS="../require.js")
     def testCopyRequireRelative(self):
         call_command("require_init", verbosity=0)
-        self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.working_dir, require_settings.REQUIRE_BASE_URL, "..", "require.js"))))
+        self.assertTrue(os.path.exists(os.path.abspath(os.path.join(WORKING_DIR, require_settings.REQUIRE_BASE_URL, "..", "require.js"))))
 
     @override_settings(STATICFILES_DIRS=(WORKING_DIR,), REQUIRE_BUILD_PROFILE="app.build.js")
     def testCopyBuildProfile(self):
         call_command("require_init", verbosity=0)
-        self.assertTrue(os.path.exists(os.path.join(self.working_dir, require_settings.REQUIRE_BASE_URL, "app.build.js")))
+        self.assertTrue(os.path.exists(os.path.join(WORKING_DIR, require_settings.REQUIRE_BASE_URL, "app.build.js")))
 
     @override_settings(STATICFILES_DIRS=(WORKING_DIR,), REQUIRE_STANDALONE_MODULES={"main": {"build_profile": "module.build.js"}})
     def testCopyStandaloneProfile(self):
         call_command("require_init", verbosity=0)
-        self.assertTrue(os.path.exists(os.path.join(self.working_dir, require_settings.REQUIRE_BASE_URL, "module.build.js")))
+        self.assertTrue(os.path.exists(os.path.join(WORKING_DIR, require_settings.REQUIRE_BASE_URL, "module.build.js")))
 
     @override_settings(REQUIRE_JS="require.js")
     def testCopyRequireCustomDir(self):
         call_command("require_init", dir=WORKING_DIR, verbosity=0)
-        self.assertTrue(os.path.exists(os.path.join(self.working_dir, require_settings.REQUIRE_BASE_URL, "require.js")))
+        self.assertTrue(os.path.exists(os.path.join(WORKING_DIR, require_settings.REQUIRE_BASE_URL, "require.js")))
 
 
 @override_settings(REQUIRE_JS="require.js", REQUIRE_BASE_URL="js")
@@ -90,18 +94,18 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
         super(OptimizedStaticFilesStorageTestsMixin, self).setUp()
         self.test_resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources", "tests"))
         resources_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
-        os.mkdir(os.path.join(self.working_dir, "js"))
+        os.mkdir(os.path.join(WORKING_DIR, "js"))
         shutil.copyfile(
             os.path.join(resources_dir, "require.js"),
-            os.path.join(self.working_dir, "js", "require.js"),
+            os.path.join(WORKING_DIR, "js", "require.js"),
         )
         shutil.copyfile(
             os.path.join(self.test_resources_dir, "main.js"),
-            os.path.join(self.working_dir, "js", "main.js"),
+            os.path.join(WORKING_DIR, "js", "main.js"),
         )
         shutil.copyfile(
             os.path.join(self.test_resources_dir, "util.js"),
-            os.path.join(self.working_dir, "js", "util.js"),
+            os.path.join(WORKING_DIR, "js", "util.js"),
         )
 
     @override_settings(REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE=None)
@@ -113,7 +117,7 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
     def testCollectStaticBuildProfile(self):
         shutil.copyfile(
             os.path.join(self.test_resources_dir, self.test_build_profile),
-            os.path.join(self.working_dir, "js", "app.build.js"),
+            os.path.join(WORKING_DIR, "js", "app.build.js"),
         )
         with self.settings(REQUIRE_ENVIRONMENT=self.require_environment):
             call_command("collectstatic", interactive=False, verbosity=0)
@@ -122,17 +126,17 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
     def testCollectStaticStandalone(self):
         with self.settings(REQUIRE_ENVIRONMENT=self.require_environment):
             call_command("collectstatic", interactive=False, verbosity=0)
-            self.assertTrue(os.path.exists(os.path.join(self.output_dir, "js", "main-built.js")))
+            self.assertTrue(os.path.exists(os.path.join(OUTPUT_DIR, "js", "main-built.js")))
 
     @override_settings(REQUIRE_BUILD_PROFILE=None, REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js", "build_profile": "main.build.js"}})
     def testCollectStaticStandaloneBuildProfile(self):
         shutil.copyfile(
             os.path.join(self.test_resources_dir, self.test_standalone_build_profile),
-            os.path.join(self.working_dir, "js", "main.build.js"),
+            os.path.join(WORKING_DIR, "js", "main.build.js"),
         )
         with self.settings(REQUIRE_ENVIRONMENT=self.require_environment):
             call_command("collectstatic", interactive=False, verbosity=0)
-            self.assertTrue(os.path.exists(os.path.join(self.output_dir, "js", "main-built.js")))
+            self.assertTrue(os.path.exists(os.path.join(OUTPUT_DIR, "js", "main-built.js")))
 
 
 @override_settings(STATICFILES_FINDERS=("django.contrib.staticfiles.finders.FileSystemFinder",), STATICFILES_DIRS=(WORKING_DIR,), STATIC_ROOT=OUTPUT_DIR, STATICFILES_STORAGE="require.storage.OptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js")
