@@ -5,7 +5,6 @@ python:
   - 3.3
   - 3.2
 env:
-  - DJANGO=django==1.5.4
   - DJANGO=django==1.5.5
   - DJANGO=django==1.6
 install:
