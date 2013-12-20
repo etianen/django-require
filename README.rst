@@ -189,6 +189,10 @@ from
     class OptimizedCachedS3BotoStorage(OptimizedFilesMixin, CachedFilesMixin, S3BotoStorage):
         pass
 
+For ready-made storage classes that combine django-require with Amazon S3, check out
+`django-require-s3 <https://github.com/etianen/django-require-s3>`_.
+
+
 Support and announcements
 -------------------------
 
