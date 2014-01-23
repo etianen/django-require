@@ -58,7 +58,7 @@ class Command(NoArgsCommand):
         resources = [
             ("require.js", require_settings.REQUIRE_JS),
         ]
-        if require_settings.REQUIRE_BUILD_PROFILE is not None:
+        if require_settings.REQUIRE_BUILD_PROFILE not in (False, None):
             resources.append(("app.build.js", require_settings.REQUIRE_BUILD_PROFILE))
         for standalone_config in require_settings.REQUIRE_STANDALONE_MODULES.values():
             if "build_profile" in standalone_config:

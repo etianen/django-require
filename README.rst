@@ -39,6 +39,8 @@ RequireJS.
 
     # The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
     # A sensible value would be 'app.build.js'. Leave blank to use the built-in default build profile.
+    # Set to False to disable running the default profile (e.g. if only using it to build Standalone
+    # Modules)
     REQUIRE_BUILD_PROFILE = None
 
     # The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
