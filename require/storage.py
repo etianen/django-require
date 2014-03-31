@@ -40,6 +40,19 @@ class TemporaryCompileEnvironment(object):
         compiler_args.extend(args)
         if self.verbosity == 0:
             kwargs.setdefault("logLevel", "4")
+        
+        #convert kwargs with list value to arg with comma sep list.
+        kwargs_to_args = []
+        for key, value in kwargs.items():
+            if key == 'common_module_args':
+                kwargs_to_args+=value
+                kwargs.pop(key)
+            elif type(value) == list:
+                kwargs_to_args.append(key+"="+",".join(value))
+                kwargs.pop(key)
+            if not value:
+                kwargs.pop(key)
+        
         compiler_args.extend(
             "{0}={1}".format(
                 key, value
@@ -47,6 +60,8 @@ class TemporaryCompileEnvironment(object):
             for key, value
             in kwargs.items()
         )
+        compiler_args.extend(kwargs_to_args)
+        
         # Run the compiler in a subprocess.
         if subprocess.call(compiler_args) != 0:
             raise OptimizationError("Error while running r.js optimizer.")
@@ -71,6 +86,41 @@ class OptimizedFilesMixin(object):
     def _file_iter(self, handle):
         return iter(partial(handle.read, self.REQUIRE_COPY_BLOCK_SIZE), b'')
 
+    def optimize_single_file(self,env, module, config, name):
+        if "out" in config:
+            if "build_profile" in config:
+                module_build_js_path = env.compile_dir_path(config["build_profile"])
+            else:
+                module_build_js_path = env.resource_path("module.build.js")
+            #need to add common.build.js above?
+            if name == 'almond':
+                include = [module]
+            else:
+                include = ['requireLib']
+            if "include" in config:
+                include = include+config["include"]
+            exclude = False
+            if "exclude" in config:
+                exclude = config["exclude"]
+            #end add
+            optimizer_kwargs = {"name": name,
+                                "include": include,
+                                "exclude": exclude,
+                                "out": env.build_dir_path(config["out"]),
+                                "baseUrl": os.path.join(env.compile_dir, require_settings.REQUIRE_BASE_URL)
+                                }
+
+            # Catch common module and add kwarg to optimizer_kwargs
+            if name is not 'almond':
+                optimizer_kwargs.update({"paths.requireLib":require_settings.REQUIRE_JS.replace('.js', '')})
+
+
+            env.run_optimizer(module_build_js_path,**optimizer_kwargs)
+        else:
+            raise ImproperlyConfigured(u"No 'out' option specified for module '{module}' in REQUIRE_STANDALONE_MODULES setting.".format(
+                module = module
+            ))
+    
     def post_process(self, paths, dry_run=False, verbosity=1, **options):
         # If this is a dry run, give up now!
         if dry_run:
@@ -101,12 +151,28 @@ class OptimizedFilesMixin(object):
                     app_build_js_path = env.compile_dir_path(require_settings.REQUIRE_BUILD_PROFILE)
                 else:
                     app_build_js_path = env.resource_path("app.build.js")
-                env.run_optimizer(
-                    app_build_js_path,
-                    dir = env.build_dir,
-                    appDir = env.compile_dir,
-                    baseUrl = require_settings.REQUIRE_BASE_URL,
+                
+                optimizer_kwargs = {'dir': env.build_dir,
+                                'appDir': env.compile_dir,
+                                'baseUrl': require_settings.REQUIRE_BASE_URL}
+
+                env.run_optimizer(app_build_js_path, **optimizer_kwargs)
+            
+            # Catch & compile common module
+            common_keys = require_settings.REQUIRE_COMMON_MODULE.keys()
+            if len(common_keys)>1:
+                raise ImproperlyConfigured('You may only specify one common module in REQUIRE_COMMON_MODULE'
+                                           'any additional modules should be specified in your app.build.js')
+
+            if common_keys:
+                shutil.copyfile(
+                    env.resource_path("require.js"),
+                    env.compile_dir_path("require.js"),
                 )
+
+            for common_module, common_config in require_settings.REQUIRE_COMMON_MODULE.items():
+                self.optimize_single_file(env, common_module, common_config, common_keys[0])
+
             # Compile standalone modules.
             if require_settings.REQUIRE_STANDALONE_MODULES:
                 shutil.copyfile(
@@ -114,23 +180,10 @@ class OptimizedFilesMixin(object):
                     env.compile_dir_path("almond.js"),
                 )
                 exclude_names.append(resolve_require_url("almond.js"))
+            
             for standalone_module, standalone_config in require_settings.REQUIRE_STANDALONE_MODULES.items():
-                if "out" in standalone_config:
-                    if "build_profile" in standalone_config:
-                        module_build_js_path = env.compile_dir_path(standalone_config["build_profile"])
-                    else:
-                        module_build_js_path = env.resource_path("module.build.js")
-                    env.run_optimizer(
-                        module_build_js_path,
-                        name = "almond",
-                        include = standalone_module,
-                        out = env.build_dir_path(standalone_config["out"]),
-                        baseUrl = os.path.join(env.compile_dir, require_settings.REQUIRE_BASE_URL),
-                    )
-                else:
-                    raise ImproperlyConfigured("No 'out' option specified for module '{module}' in REQUIRE_STANDALONE_MODULES setting.".format(
-                        module = standalone_module
-                    ))
+                self.optimize_single_file(env,standalone_module,standalone_config, 'almond')
+            
             # Update assets with modified ones.
             compiled_storage = FileSystemStorage(env.build_dir)
             # Walk the compiled directory, checking for modified assets.
