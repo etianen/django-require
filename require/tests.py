@@ -139,6 +139,26 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
             call_command("collectstatic", interactive=False, verbosity=0)
             self.assertTrue(os.path.exists(staticfiles_storage.path("js/main-built.js")))
 
+    @override_settings(REQUIRE_BUILD_PROFILE=False, REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js", "build_profile": "main.build.js"}})
+    def testCollectStaticNoBuildProfile(self):
+        shutil.copyfile(
+            os.path.join(self.test_resources_dir, self.test_standalone_build_profile),
+            os.path.join(WORKING_DIR, "js", "main.build.js"),
+        )
+        contents = """
+function test(){
+    // dont uglify this
+};
+"""
+        with open(os.path.join(WORKING_DIR, 'dontcompress.js'), 'w') as f:
+            f.write(contents)
+        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment):
+            call_command("collectstatic", interactive=False, verbosity=0)
+            self.assertTrue(os.path.exists(staticfiles_storage.path("js/main-built.js")))
+
+            with open(staticfiles_storage.path('dontcompress.js')) as f:
+                self.assertEqual(f.read(), contents)
+
 
 @override_settings(STATICFILES_FINDERS=("django.contrib.staticfiles.finders.FileSystemFinder",), STATICFILES_DIRS=(WORKING_DIR,), STATIC_ROOT=OUTPUT_DIR, STATICFILES_STORAGE="require.storage.OptimizedStaticFilesStorage", REQUIRE_JS="require.js", REQUIRE_BASE_URL="js")
 class OptimizedStaticFilesStorageNodeTest(OptimizedStaticFilesStorageTestsMixin, TestCase):
