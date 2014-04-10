@@ -35,6 +35,7 @@ class RhinoEnvironment(Environment):
         # Start of the command to run the compiler in Java.
         return [
             "java",
+            "-Xss1M",
             "-classpath",
             ":".join((
                 self.env.resource_path("js.jar"),
