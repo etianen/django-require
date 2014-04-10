@@ -2,6 +2,15 @@ django-require changelog
 ========================
 
 
+1.0.6 - 10/04/2014
+------------------
+
+* Increasing stack size of Rhino environment.
+* Updating requirejs to 2.1.11.
+* Updating r.js to 2.1.11.
+* Updating almond to 0.2.9
+
+
 1.0.5 - 12/11/2013
 ------------------
 
