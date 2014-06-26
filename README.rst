@@ -16,7 +16,7 @@ Installation
 ------------
 
 1. Checkout the latest django-require release and copy or symlink the
-   ``require`` directory into your ``PYTHONPATH``.  If using pip, run 
+   ``require`` directory into your ``PYTHONPATH``.  If using pip, run
    ``pip install django-require``.
 2. Add ``'require'`` to your ``INSTALLED_APPS`` setting.
 3. Set your ``STATICFILES_STORAGE`` setting to
@@ -45,6 +45,9 @@ RequireJS.
 
     # The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
     REQUIRE_JS = "require.js"
+
+    # Whether to use a data-main attribute to load the module. If this is false and debug is true, the require script and the module will be loaded separately.
+    REQUIRE_DATA_MAIN = True
 
     # A dictionary of standalone modules to build with almond.js.
     # See the section on Standalone Modules, below.
@@ -146,7 +149,7 @@ To specify standalone modules, simply add them to your
         "main": {
             # Where to output the built module, relative to REQUIRE_BASE_URL.
             "out": "main-built.js",
-            
+
             # Optional: A build profile used to build this standalone module.
             "build_profile": "main.build.js",
         }
@@ -218,4 +221,3 @@ usually find him on the Internet in a number of different places:
 -  `Website <http://www.etianen.com/>`_
 -  `Twitter <http://twitter.com/etianen>`_
 -  `Google Profile <http://www.google.com/profiles/david.etianen>`_
-

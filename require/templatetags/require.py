@@ -15,7 +15,7 @@ register = template.Library()
 def require_module(module):
     """
     Inserts a script tag to load the named module, which is relative to the REQUIRE_BASE_URL setting.
-    
+
     If the module is configured in REQUIRE_STANDALONE_MODULES, and REQUIRE_DEBUG is False, then
     then the standalone built version of the module will be loaded instead, bypassing require.js
     for extra load performance.
@@ -24,7 +24,10 @@ def require_module(module):
         return """<script src="{module}"></script>""".format(
             module = staticfiles_storage.url(resolve_require_module(require_settings.REQUIRE_STANDALONE_MODULES[module]["out"])),
         )
-    return """<script src="{src}" data-main="{module}"></script>""".format(
+    html = """<script src="{src}" data-main="{module}"></script>"""
+    if not require_settings.REQUIRE_DATA_MAIN:
+        html = """<script src="{src}"></script><script src="{module}"></script>"""
+    return html.format(
         src = staticfiles_storage.url(resolve_require_url(require_settings.REQUIRE_JS)),
         module = staticfiles_storage.url(resolve_require_module(module)),
     )
