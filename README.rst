@@ -34,7 +34,9 @@ RequireJS.
 
 ::
 
-    # The baseUrl to pass to the r.js optimizer.
+    # The baseUrl to pass to the r.js optimizer, relative to STATIC_ROOT.
+    # Note that the optimization is done in the temporary directory, actually.
+    # {% require_module %} tag also use this as a base URL, relative to STATIC_URL, to create URL for your main module.
     REQUIRE_BASE_URL = "js"
 
     # The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
