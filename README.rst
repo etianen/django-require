@@ -34,7 +34,7 @@ RequireJS.
 
 ::
 
-    # The baseUrl to pass to the r.js optimizer.
+    # The baseUrl to pass to the r.js optimizer, relative to STATIC_ROOT.
     REQUIRE_BASE_URL = "js"
 
     # The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
