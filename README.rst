@@ -194,6 +194,14 @@ from
 For ready-made storage classes that combine django-require with Amazon S3, check out
 `django-require-s3 <https://github.com/etianen/django-require-s3>`_.
 
+Tests
+-----
+
+You can run the test suite from the `test_project` directory
+in the root of the source checkout::
+
+    cd test_project
+    ./manage.py test require
 
 Support and announcements
 -------------------------
