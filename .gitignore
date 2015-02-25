@@ -6,7 +6,9 @@
 *.pyo
 .bzr
 .bzrignore
+.coverage
 Thumbs.db
 dist
 build
 MANIFEST
+htmlcov

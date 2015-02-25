@@ -197,11 +197,16 @@ For ready-made storage classes that combine django-require with Amazon S3, check
 Tests
 -----
 
-You can run the test suite from the `test_project` directory
-in the root of the source checkout::
+You can run the test suite from the root of the source checkout::
 
-    cd test_project
-    ./manage.py test require
+    test_project/manage.py test require
+
+Test coverage reports can be generated from the same directory with::
+
+    coverage run --source='.' test_project/manage.py test require
+    coverage html
+
+Open `htmlcov/index.html` in a browser to see the HTML coverage report.
 
 Support and announcements
 -------------------------
