@@ -181,3 +181,13 @@ class OptimizedStaticFilesStorage(OptimizedFilesMixin, StaticFilesStorage):
 class OptimizedCachedStaticFilesStorage(OptimizedFilesMixin, CachedStaticFilesStorage):
 
     pass
+
+
+try:
+    from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
+except ImportError:  # Django < 1.7
+    pass
+else:
+    class OptimizedManifestStaticFilesStorage(OptimizedFilesMixin, ManifestStaticFilesStorage):
+
+        pass
