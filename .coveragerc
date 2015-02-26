@@ -1,0 +1,9 @@
+# .coveragerc to control coverage.py
+[run]
+omit = 
+    require/tests.py
+    test_project/*
+    setup.py
+
+[html]
+directory = htmlcov

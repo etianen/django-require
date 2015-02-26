@@ -1,6 +1,15 @@
 django-require changelog
 ========================
 
+1.0.7 - ??
+----------
+
+* Updating requirejs to 2.1.16.
+* Updating r.js to 2.1.16.
+* Updating almond to 0.3.0
+* Updating closure compiler to v20150126.
+* Updating rhino to 1.7R5.
+
 
 1.0.6 - 10/04/2014
 ------------------
