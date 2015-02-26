@@ -20,8 +20,9 @@ Installation
    ``pip install django-require``.
 2. Add ``'require'`` to your ``INSTALLED_APPS`` setting.
 3. Set your ``STATICFILES_STORAGE`` setting to
-   ``'require.storage.OptimizedStaticFilesStorage'`` or
-   ``'require.storage.OptimizedCachedStaticFilesStorage'``.
+   ``'require.storage.OptimizedStaticFilesStorage'``,
+   ``'require.storage.OptimizedCachedStaticFilesStorage'`` or
+   ``'require.storage.OptimizedManifestStaticFilesStorage'``.
 
 Available settings
 ------------------
@@ -159,7 +160,7 @@ The r.js optimizer is run automatically whenever you call the
 ``collectstatic`` management command. The optimizer is run as a
 post-processing step on your static files.
 
-django-require provides two storage classes that are ready to use with
+django-require provides three storage classes that are ready to use with
 the r.js optimizer:
 
 -  ``require.storage.OptimizedStaticFilesStorage`` - A filesystem-based
@@ -167,6 +168,12 @@ the r.js optimizer:
 -  ``require.storage.OptimizedCachedStaticFilesStorage`` - As above, but
    fingerprints all files with an MD5 hash of their contents for HTTP
    cache-busting.
+-  ``require.storage.OptimizedManifestStaticFilesStorage`` - As above, but
+   fingerprints all files with an MD5 hash of their contents for HTTP
+   cache-busting and stores the fingerprints in a JSON file on disk instead
+   of using a cache. Please note that the
+   ``OptimizedManifestStaticFilesStorage`` is only available in Django 1.7 and
+   above.
 
 Creating your own optimizing storage classes
 --------------------------------------------
