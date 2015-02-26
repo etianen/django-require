@@ -1,9 +1,10 @@
 django-require changelog
 ========================
 
-1.0.7 - ??
-----------
+1.0.7 - 26/02/2015
+------------------
 
+* Added in OptimizedManifestStaticFilesStorage.
 * Updating requirejs to 2.1.16.
 * Updating r.js to 2.1.16.
 * Updating almond to 0.3.0
