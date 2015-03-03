@@ -1,6 +1,12 @@
 django-require changelog
 ========================
 
+Unreleased
+----------
+
+* Updating almond to 0.3.1
+
+
 1.0.7 - 26/02/2015
 ------------------
 
