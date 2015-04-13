@@ -144,7 +144,7 @@ class OptimizedFilesMixin(object):
                     if build_storage_name in exclude_names:
                         # Delete from storage, if originally present.
                         if build_name in compile_info:
-                            del paths[build_storage_name]
+                            del paths[build_name]
                             self.delete(build_storage_name)
                         continue
                     # Update the asset.
@@ -160,7 +160,7 @@ class OptimizedFilesMixin(object):
                             if hash.digest() == compile_info[build_name]:
                                 continue
                         # If we're here, then the asset has been modified by the build script! Time to re-save it!
-                        paths[build_storage_name] = (compiled_storage, build_name)
+                        paths[build_name] = (compiled_storage, build_name)
                         # It's definitely time to save this file.
                         self.delete(build_storage_name)
                         self.save(build_storage_name, build_handle)
