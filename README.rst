@@ -16,7 +16,7 @@ Installation
 ------------
 
 1. Checkout the latest django-require release and copy or symlink the
-   ``require`` directory into your ``PYTHONPATH``.  If using pip, run 
+   ``require`` directory into your ``PYTHONPATH``.  If using pip, run
    ``pip install django-require``.
 2. Add ``'require'`` to your ``INSTALLED_APPS`` setting.
 3. Set your ``STATICFILES_STORAGE`` setting to
@@ -33,7 +33,7 @@ files. Please consult the `RequireJS <http://requirejs.org/>`_
 documentation for more information about how to build javascript using
 RequireJS.
 
-::
+.. code:: python
 
     # The baseUrl to pass to the r.js optimizer, relative to STATIC_ROOT.
     REQUIRE_BASE_URL = "js"
@@ -70,7 +70,7 @@ can simply run the ``require_init`` management to copy a version of
 require.js into your ``STATICFILES_DIRS``, at the location specified by
 your ``REQUIRE_BASE_URL`` and ``REQUIRE_JS`` settings.
 
-::
+.. code:: bash
 
     $ ./manage.py require_init
 
@@ -93,7 +93,7 @@ Running javascript modules in templates
 You can run javascript modules in templates by using the
 ``{% require_module %}`` template tag.
 
-::
+.. code:: html
 
     <html>
         {% load require %}
@@ -105,7 +105,7 @@ You can run javascript modules in templates by using the
 
 This template fragment would then render to something like:
 
-::
+.. code:: html
 
     <html>
         <head>
@@ -120,7 +120,7 @@ If the ``'main'`` module was specified as a standalone module in your
 
 This template fragment would then render to something like:
 
-::
+.. code:: html
 
     <html>
         <head>
@@ -141,13 +141,13 @@ make sure that it's safe to build your module in standalone mode.
 To specify standalone modules, simply add them to your
 ``REQUIRE_STANDALONE_MODULES`` setting, as below:
 
-::
+.. code:: python
 
     REQUIRE_STANDALONE_MODULES = {
         "main": {
             # Where to output the built module, relative to REQUIRE_BASE_URL.
             "out": "main-built.js",
-            
+
             # Optional: A build profile used to build this standalone module.
             "build_profile": "main.build.js",
         }
@@ -184,7 +184,7 @@ an optimizing storage that uploads to Amazon S3 using ``S3BotoStorage``
 from
 `django-storages <http://django-storages.readthedocs.org/en/latest/>`_:
 
-::
+.. code:: python
 
     from storages.backends.s3boto import S3BotoStorage
     from require.storage import OptimizedFilesMixin
@@ -238,4 +238,3 @@ usually find him on the Internet in a number of different places:
 -  `Website <http://www.etianen.com/>`_
 -  `Twitter <http://twitter.com/etianen>`_
 -  `Google Profile <http://www.google.com/profiles/david.etianen>`_
-
