@@ -1,16 +1,17 @@
 django-require changelog
 ========================
 
-Unreleased
-----------
+1.0.8 - 30/06/2015
+------------------
 
 * Updating almond to 0.3.1
+* Fixed error running collect static with `OptimizedCachedStaticFilesStorage` on windows.
 
 
 1.0.7 - 26/02/2015
 ------------------
 
-* Added in OptimizedManifestStaticFilesStorage.
+* Added in `OptimizedManifestStaticFilesStorage`.
 * Updating requirejs to 2.1.16.
 * Updating r.js to 2.1.16.
 * Updating almond to 0.3.0
@@ -61,7 +62,7 @@ Unreleased
 * Not adding build profiles to REQUIRE_EXCLUDE during compilation, to speed up redeploys to remote filesystems.
 * Updating requirejs to 2.1.4
 * Updating almond to 0.2.5
-* Updating closure compiler to r2388 
+* Updating closure compiler to r2388
 * Updating rhino to 1.7R4.
 
 
