@@ -4,8 +4,10 @@ django-require changelog
 1.0.8 - 30/06/2015
 ------------------
 
-* Updating almond to 0.3.1
-* Fixed error running collect static with `OptimizedCachedStaticFilesStorage` on windows.
+* Updating requirejs to 2.1.18.
+* Updating r.js to 2.1.18.
+* Updating almond to 0.3.1 (@thijstriemstra).
+* Fixed error running collect static with `OptimizedCachedStaticFilesStorage` on windows (@dwatkinsweb).
 
 
 1.0.7 - 26/02/2015
