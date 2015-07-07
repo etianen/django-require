@@ -150,6 +150,14 @@ To specify standalone modules, simply add them to your
 
             # Optional: A build profile used to build this standalone module.
             "build_profile": "main.build.js",
+
+            # Optional: A require(['main-built.js']); call for the standalone module will be included
+            # at the end of the built standalone, resulting in the immediate initialization
+            # of the module when the page loads. This is a convenience for the insertRequire
+            # behavior of the standard optimizer build config that will automatically require
+            # the module configured without requiring you to specify a separate build file for
+            # each
+            "insert_require": True,
         }
     }
 
