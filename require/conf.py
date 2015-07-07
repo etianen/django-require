@@ -40,5 +40,9 @@ class LazySettings(object):
             'node': 'require.environments.NodeEnvironment',
             'rhino': 'require.environments.RhinoEnvironment',
             })
+
+    @property
+    def REQUIRE_COMMON_MODULE(self):
+        return getattr(django_settings, "REQUIRE_COMMON_MODULE", {})
     
 settings = LazySettings()
