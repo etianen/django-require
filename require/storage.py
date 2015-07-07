@@ -120,13 +120,30 @@ class OptimizedFilesMixin(object):
                         module_build_js_path = env.compile_dir_path(standalone_config["build_profile"])
                     else:
                         module_build_js_path = env.resource_path("module.build.js")
-                    env.run_optimizer(
-                        module_build_js_path,
-                        name = "almond",
-                        include = standalone_module,
-                        out = env.build_dir_path(standalone_config["out"]),
-                        baseUrl = os.path.join(env.compile_dir, require_settings.REQUIRE_BASE_URL),
-                    )
+
+                    if "insert_require" in standalone_config:
+
+                        require_script = standalone_module if standalone_config['insert_require'] == True else standalone_config['insert_require']
+
+                        env.run_optimizer(
+                            module_build_js_path,
+                            name = "almond",
+                            include = standalone_module,
+                            out = env.build_dir_path(standalone_config["out"]),
+                            baseUrl = os.path.join(env.compile_dir, require_settings.REQUIRE_BASE_URL),
+                            insertRequire = require_script
+                        )
+
+                    else:
+
+                        env.run_optimizer(
+                            module_build_js_path,
+                            name = "almond",
+                            include = standalone_module,
+                            out = env.build_dir_path(standalone_config["out"]),
+                            baseUrl = os.path.join(env.compile_dir, require_settings.REQUIRE_BASE_URL)
+                        )
+
                 else:
                     raise ImproperlyConfigured("No 'out' option specified for module '{module}' in REQUIRE_STANDALONE_MODULES setting.".format(
                         module = standalone_module
