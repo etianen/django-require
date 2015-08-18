@@ -1,7 +1,10 @@
 from __future__ import unicode_literals
 
 import posixpath
-from django.utils.importlib import import_module
+try:
+    from importlib import import_module
+except ImportError:
+    from django.utils.importlib import import_module
 
 from require.conf import settings as require_settings
 
