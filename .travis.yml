@@ -3,10 +3,14 @@ python:
   - 2.7
   - 2.6
   - 3.3
+  - 3.4
+  - 3.5
   - 3.2
 env:
   - DJANGO=django==1.5.5
   - DJANGO=django==1.6
+  - DJANGO=django==1.7
+  - DJANGO=django
 install:
   - pip install $DJANGO
   - python setup.py -q install
