@@ -1,7 +1,6 @@
-from distutils.core import setup
+from setuptools import setup
 
 from require import __version__
-
 
 version_str = '.'.join(str(n) for n in __version__)
 
@@ -15,6 +14,7 @@ setup(
     author='Dave Hall',
     author_email='dave@etianen.com',
     url='https://github.com/etianen/django-require',
+    test_suite='tests',
     packages=[
         'require',
         'require.management',
@@ -28,6 +28,7 @@ setup(
             'resources/tests/*.js',
         ],
     },
+    include_package_data=True,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
@@ -44,6 +45,8 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: pypy',
+        'Programming Language :: Python :: pypy3',
         'Topic :: Internet :: WWW/HTTP',
     ],
 )

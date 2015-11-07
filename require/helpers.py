@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 
 import posixpath
+
+from require.conf import settings as require_settings
+
 try:
     from importlib import import_module
 except ImportError:
     from django.utils.importlib import import_module
-
-from require.conf import settings as require_settings
-
 
 
 def import_module_attr(module):
@@ -18,7 +18,8 @@ def import_module_attr(module):
 
 
 def resolve_require_url(name):
-    return posixpath.normpath(posixpath.join(require_settings.REQUIRE_BASE_URL, name))
+    return posixpath.normpath(
+        posixpath.join(require_settings.REQUIRE_BASE_URL, name))
 
 
 def resolve_require_module(name):

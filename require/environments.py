@@ -17,6 +17,7 @@ def load_environment():
 
 
 class Environment(object):
+
     def __init__(self, environment):
         self.env = environment
 
@@ -25,23 +26,26 @@ class Environment(object):
 
 
 class NodeEnvironment(Environment):
+
     def args(self):
         # Start of the command to run the compiler in Node.
-        return ["node"]
+        return ['node']
 
 
 class RhinoEnvironment(Environment):
+
     def args(self):
         # Start of the command to run the compiler in Java.
         return [
-            "java",
-            "-Xss1M",
-            "-classpath",
-            ":".join((
-                self.env.resource_path("js.jar"),
-                self.env.resource_path("compiler.jar"),
+            'java',
+            '-Xss100M',
+            # '-Xmn100M', '-Xms500M', '-Xmx500M',
+            '-classpath',
+            ':'.join((
+                self.env.resource_path('js.jar'),
+                self.env.resource_path('compiler.jar'),
             )),
-            "org.mozilla.javascript.tools.shell.Main"
+            'org.mozilla.javascript.tools.shell.Main'
         ]
 
 
@@ -56,8 +60,8 @@ class AutoEnvironment(Environment):
             if find_executable(executable):
                 return environment
 
-        raise EnvironmentError("no environments detected: {envs}".format(
-            envs=', '.join([ str(env) for env in self.environments ])))
+        raise EnvironmentError('no environments detected: {envs}'.format(
+            envs=', '.join([str(env) for env in self.environments])))
 
     def args(self):
         return self.environment.args()

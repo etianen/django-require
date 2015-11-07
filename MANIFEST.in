@@ -3,3 +3,4 @@ include require/resources/*.js
 include require/resources/tests/*.js
 include LICENSE
 include README.rst
+recursive-exclude * tests.py
