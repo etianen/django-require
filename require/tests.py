@@ -5,10 +5,9 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-from unittest import mock
 
-from django.contrib.staticfiles.storage import (
-    StaticFilesStorage, staticfiles_storage)
+import mock
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import base, call_command
 from django.test import TestCase
@@ -16,8 +15,7 @@ from django.test.utils import override_settings
 from require.conf import settings as require_settings
 from require.environments import AutoEnvironment, Environment
 from require.storage import (
-    OptimizationError, OptimizedFilesMixin, TemporaryCompileEnvironment,
-    OptimizedStaticFilesStorage)
+    OptimizationError, OptimizedFilesMixin, TemporaryCompileEnvironment)
 from require.templatetags.require import require_module
 
 WORKING_DIR = tempfile.mkdtemp()
