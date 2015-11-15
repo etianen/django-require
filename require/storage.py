@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import tempfile
 from contextlib import closing
-from functools import partial
 
 from django.contrib.staticfiles.storage import (
     CachedStaticFilesStorage, StaticFilesStorage)
@@ -78,7 +77,7 @@ class OptimizedFilesMixin(object):
     REQUIRE_COPY_BLOCK_SIZE = 1024 * 1024  # 1 MB.
 
     def _file_iter(self, handle):
-        return iter(partial(handle.read, self.REQUIRE_COPY_BLOCK_SIZE), b'')
+        yield handle.read(self.REQUIRE_COPY_BLOCK_SIZE)
 
     def post_process(self, paths, dry_run=False, verbosity=1, **options):
         # If this is a dry run, give up now!
