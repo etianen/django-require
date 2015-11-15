@@ -7,15 +7,17 @@ import tempfile
 import unittest
 from unittest import mock
 
-from django.contrib.staticfiles.storage import staticfiles_storage
-from django.core.management import base, call_command
+from django.contrib.staticfiles.storage import (
+    StaticFilesStorage, staticfiles_storage)
 from django.core.exceptions import ImproperlyConfigured
+from django.core.management import base, call_command
 from django.test import TestCase
 from django.test.utils import override_settings
 from require.conf import settings as require_settings
 from require.environments import AutoEnvironment, Environment
 from require.storage import (
-    OptimizationError, OptimizedFilesMixin, TemporaryCompileEnvironment)
+    OptimizationError, OptimizedFilesMixin, TemporaryCompileEnvironment,
+    OptimizedStaticFilesStorage)
 from require.templatetags.require import require_module
 
 WORKING_DIR = tempfile.mkdtemp()
@@ -245,6 +247,49 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
                 os.path.exists(staticfiles_storage.path('js/main-built.js')))
 
     @override_settings(
+        REQUIRE_BUILD_PROFILE=None,
+        REQUIRE_STANDALONE_MODULES={
+            'main': {
+                'out': 'main-built.js', 'build_profile': 'main.build.js'}})
+    def testExtraPostProcess(self):
+        def post_process(self, paths, *args, **kwargs):
+            return ((x, x, True) for x in paths.keys())
+        import django
+        django.contrib.staticfiles.storage.StaticFilesStorage.post_process = \
+            post_process
+
+        shutil.copyfile(
+            os.path.join(
+                self.test_resources_dir, self.test_standalone_build_profile),
+            os.path.join(WORKING_DIR, 'js', 'main.build.js'),
+        )
+        # OptimizedStaticFilesStorage.post_process = post_process
+        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment):
+            call_command('collectstatic', interactive=False, verbosity=0)
+            self.assertTrue(
+                os.path.exists(staticfiles_storage.path('js/main-built.js')))
+        del(django.contrib.staticfiles.storage.StaticFilesStorage.post_process)
+
+    @override_settings(
+        REQUIRE_BUILD_PROFILE=None,
+        REQUIRE_STANDALONE_MODULES={
+            'main': {
+                'out': 'main-built.js', 'build_profile': 'main.build.js'}},
+        REQUIRE_EXCLUDE=('js/util.js',))
+    def testCollectStaticStandaloneBuildProfileWithExcludedFile(self):
+        shutil.copyfile(
+            os.path.join(
+                self.test_resources_dir, self.test_standalone_build_profile),
+            os.path.join(WORKING_DIR, 'js', 'main.build.js'),
+        )
+        with self.settings(REQUIRE_ENVIRONMENT=self.require_environment):
+            call_command('collectstatic', interactive=False, verbosity=0)
+            self.assertTrue(
+                os.path.exists(staticfiles_storage.path('js/main-built.js')))
+            self.assertFalse(
+                os.path.exists(staticfiles_storage.path('js/util.js')))
+
+    @override_settings(
         REQUIRE_BUILD_PROFILE=False,
         REQUIRE_STANDALONE_MODULES={
             'main': {
@@ -428,16 +473,16 @@ class OptimizedFilesMixinTest(TestCase):
         REQUIRE_BUILD_PROFILE=None)
     def test_iterator_raises_improperlyconfigured(self):
         paths = {
-            'file1': (mock.Mock(), 'file1'),
-            'file2': (mock.Mock(), 'file2'),
+            'js/file1': (mock.Mock(), 'js/file1'),
+            'js/file2': (mock.Mock(), 'js/file2'),
         }
-        paths['file1'][0].open = mock.mock_open(read_data=b'file1')
-        paths['file2'][0].open = mock.mock_open(read_data=b'file2')
+        paths['js/file1'][0].open = mock.mock_open(read_data=b'js/file1')
+        paths['js/file2'][0].open = mock.mock_open(read_data=b'js/file2')
         return_iterator = self.optimized_mixin.post_process(paths)
         with self.assertRaisesMessage(
                 ImproperlyConfigured,
                 'No \'out\' option specified for module \'a\' in '
                 'REQUIRE_STANDALONE_MODULES setting'):
             count, item = enumerate(return_iterator)
-        paths['file1'][0].open.assert_called_with('file1', 'rb')
-        paths['file2'][0].open.assert_called_with('file2', 'rb')
+        paths['js/file1'][0].open.assert_called_with('js/file1', 'rb')
+        paths['js/file2'][0].open.assert_called_with('js/file2', 'rb')

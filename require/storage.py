@@ -27,9 +27,6 @@ class TemporaryCompileEnvironment(object):
     def __init__(self, verbosity):
         self.compile_dir = tempfile.mkdtemp()
         self.build_dir = tempfile.mkdtemp()
-        if require_settings.REQUIRE_BASE_URL:
-            os.mkdir(os.path.join(
-                self.compile_dir, require_settings.REQUIRE_BASE_URL))
         self.verbosity = verbosity
 
     def resource_path(self, name):
@@ -100,14 +97,14 @@ class OptimizedFilesMixin(object):
                 if not os.path.exists(dst_dir):
                     os.makedirs(dst_dir)
                 # Copy and generate md5
-                hash = hashlib.md5()
+                hash_md5 = hashlib.md5()
                 with closing(storage.open(path, 'rb')) as src_handle:
                     with open(dst_path, 'wb') as dst_handle:
                         for block in self._file_iter(src_handle):
-                            hash.update(block)
+                            hash_md5.update(block)
                             dst_handle.write(block)
-                # Store details of file.
-                compile_info[name] = hash.digest()
+                # Store md5 hash of file.
+                compile_info[name] = hash_md5.digest()
             # Run the optimizer.
             if require_settings.REQUIRE_BUILD_PROFILE is not False:
                 if require_settings.REQUIRE_BUILD_PROFILE is not None:
@@ -174,14 +171,14 @@ class OptimizedFilesMixin(object):
                             open(build_filepath, 'rb'),
                             build_storage_name) as build_handle:
                         # Calculate asset hash.
-                        hash = hashlib.md5()
+                        hash_md5 = hashlib.md5()
                         for block in self._file_iter(build_handle):
-                            hash.update(block)
+                            hash_md5.update(block)
                         build_handle.seek(0)
                         # Check if the asset has been modifed.
                         if build_name in compile_info:
                             # Get the hash of the new file.
-                            if hash.digest() == compile_info[build_name]:
+                            if hash_md5.digest() == compile_info[build_name]:
                                 continue
                         # If we're here, then the asset has been modified by
                         # the build script! Time to re-save it!
@@ -210,7 +207,7 @@ class OptimizedCachedStaticFilesStorage(
 
 try:
     from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
-except ImportError:  # Django < 1.7
+except ImportError:  # pragma: no cover, Django < 1.7
     pass
 else:
     class OptimizedManifestStaticFilesStorage(
