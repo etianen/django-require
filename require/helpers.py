@@ -6,7 +6,7 @@ from require.conf import settings as require_settings
 
 try:
     from importlib import import_module
-except ImportError:
+except ImportError:  # pragma: no cover
     from django.utils.importlib import import_module
 
 

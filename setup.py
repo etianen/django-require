@@ -1,9 +1,28 @@
+import os
 from setuptools import setup
 
 from require import __version__
 
 version_str = '.'.join(str(n) for n in __version__)
 
+# In order for coverage to work, we don't install any packages when
+# tox is running the tests
+packages = []
+package_data = {}
+if os.environ.get('TOX_ENV') is None:
+    packages = [
+        'require',
+        'require.management',
+        'require.management.commands',
+        'require.templatetags',
+    ]
+    package_data = {
+        'require': [
+            'resources/*.jar',
+            'resources/*.js',
+            'resources/tests/*.js',
+        ],
+    }
 
 setup(
     name='django-require',
@@ -15,19 +34,8 @@ setup(
     author_email='dave@etianen.com',
     url='https://github.com/etianen/django-require',
     test_suite='tests',
-    packages=[
-        'require',
-        'require.management',
-        'require.management.commands',
-        'require.templatetags',
-    ],
-    package_data={
-        'require': [
-            'resources/*.jar',
-            'resources/*.js',
-            'resources/tests/*.js',
-        ],
-    },
+    packages=packages,
+    package_data=package_data,
     include_package_data=True,
     classifiers=[
         'Development Status :: 5 - Production/Stable',

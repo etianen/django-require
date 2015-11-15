@@ -5,23 +5,28 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.core.management import call_command
+from django.core.management import base, call_command
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.test.utils import override_settings
-
 from require.conf import settings as require_settings
+from require.environments import AutoEnvironment, Environment
+from require.storage import (
+    OptimizationError, OptimizedFilesMixin, TemporaryCompileEnvironment)
 from require.templatetags.require import require_module
 
 WORKING_DIR = tempfile.mkdtemp()
+WORKING_DIR2 = tempfile.mkdtemp()
 OUTPUT_DIR = tempfile.mkdtemp()
 
 
 class WorkingDirMixin(object):
 
     def tearDown(self):
-        for working_dir in (WORKING_DIR, OUTPUT_DIR):
+        for working_dir in (WORKING_DIR, WORKING_DIR2, OUTPUT_DIR):
             for name in os.listdir(working_dir):
                 path = os.path.join(working_dir, name)
                 if os.path.isdir(path):
@@ -41,6 +46,60 @@ class RequireInitTest(WorkingDirMixin, TestCase):
             os.path.join(
                 WORKING_DIR, require_settings.REQUIRE_BASE_URL,
                 'require.js')))
+
+    @override_settings(
+        STATICFILES_DIRS=(WORKING_DIR,), REQUIRE_JS='require.js')
+    def testCopyRequireMoreVerbosity(self):
+        call_command('require_init', verbosity=1)
+        self.assertTrue(os.path.exists(
+            os.path.join(
+                WORKING_DIR, require_settings.REQUIRE_BASE_URL,
+                'require.js')))
+
+    @override_settings(
+        STATICFILES_DIRS=(WORKING_DIR,), REQUIRE_JS='require.js')
+    @mock.patch('django.core.management.base.OutputWrapper.write')
+    def testCopyRequireNoOverwriteMode(self, mock_stdout_write):
+        """
+        Init the module while not overwriting an existing asset.
+        """
+        os.mkdir(os.path.join(
+            WORKING_DIR, require_settings.REQUIRE_BASE_URL))
+        with open(os.path.join(
+                WORKING_DIR, require_settings.REQUIRE_BASE_URL,
+                'require.js'), 'w') as fp:
+            fp.write('foo')
+        call_command('require_init', verbosity=1)
+        self.assertTrue(os.path.exists(
+            os.path.join(
+                WORKING_DIR, require_settings.REQUIRE_BASE_URL,
+                'require.js')))
+        self.assertEqual(mock_stdout_write.call_count, 1)
+        self.assertRegex(
+            mock_stdout_write.call_args[0][0],
+            r'.*require.js already exists, skipping\.\n$')
+
+    @override_settings(
+        STATICFILES_DIRS=(WORKING_DIR,), REQUIRE_JS='require.js')
+    def testMoreWorkingDirs(self):
+        """
+        Test when more working dirs are passed, the latter is used.
+        """
+        call_command(
+            'require_init', verbosity=0, dir=(WORKING_DIR, WORKING_DIR2))
+        self.assertTrue(os.path.exists(
+            os.path.join(
+                WORKING_DIR2, require_settings.REQUIRE_BASE_URL,
+                'require.js')))
+
+    @override_settings(
+        STATICFILES_DIRS=(), REQUIRE_JS='require.js')
+    def testEmptyStaticFiles(self):
+        with self.assertRaisesMessage(
+                base.CommandError,
+                'settings.STATICFILES_DIRS is empty, and no --dir '
+                'option specified'):
+            call_command('require_init', verbosity=0)
 
     @override_settings(
         STATICFILES_DIRS=(WORKING_DIR,), REQUIRE_JS='../require.js')
@@ -244,3 +303,141 @@ class OptimizedStaticFilesStorageRhinoTest(
     test_build_profile = 'app.build.closure.js'
 
     test_standalone_build_profile = 'module.build.closure.js'
+
+
+class EmptyEnvironment(AutoEnvironment):
+
+    """Empty environment class to test AutoEnvironment."""
+    environments = []
+
+
+class EmptyEnvironmentTest(TestCase):
+
+    """Tests for AutoEnvironment where environment itself is empty."""
+
+    def setUp(self):
+        self.empty_environment = EmptyEnvironment([])
+
+    def test_empty_environment_variable(self):
+        """
+        Test if the environment variable can raise an
+        EnvironmentError().
+        """
+        with self.assertRaisesMessage(
+                EnvironmentError, 'no environments detected:'):
+            self.empty_environment.environment
+
+    def test_empty_environment_args(self):
+        """
+        Test if the args function raises an error with our empty class.
+        """
+        with self.assertRaisesMessage(
+                EnvironmentError, 'no environments detected:'):
+            self.empty_environment.args()
+
+
+class AutoEnvironmentTest(TestCase):
+
+    """Tests for AutoEnvironment."""
+
+    def setUp(self):
+        self.auto_environment = AutoEnvironment([])
+
+    def test_parent_environment_args_raises_notimplemented(self):
+        """
+        Test if the root Environment class' args() function raises
+        a NotImplementedError.
+        """
+        with self.assertRaises(NotImplementedError):
+            super(AutoEnvironment, self.auto_environment).args()
+
+    def tests_serves_an_environment(self):
+        """
+        Test if the enviroment cached property serves us an environment.
+        """
+        environment = self.auto_environment.environment
+        self.assertIsInstance(environment, Environment)
+
+
+class TemporaryCompileEnvironmentTest(TestCase):
+
+    """
+    Tests for TemporaryCompileEnvironment.
+    """
+
+    def setUp(self):
+        self.patch_loadenv = mock.patch('require.storage.load_environment')
+        self.mock_loadenv = self.patch_loadenv.start()
+        self.patch_subprocesscall = mock.patch(
+            'require.storage.subprocess.call')
+        self.mock_subprocesscall = self.patch_subprocesscall.start()
+
+        self.mock_loadenv.return_value.return_value.args.return_value = ['1']
+
+    def tearDown(self):
+        self.patch_loadenv.stop()
+        self.patch_subprocesscall.stop()
+
+    def test_set_default_loglevel(self):
+        """
+        Test if run_optimizer sets a default loglevel AND raises an
+        OptimizationError.
+        """
+        environment = TemporaryCompileEnvironment(verbosity=0)
+        with self.assertRaisesMessage(
+                OptimizationError, 'Error while running r.js optimizer.'):
+            environment.run_optimizer()
+        self.assertTrue(self.mock_loadenv.called)
+        self.assertEqual(
+            self.mock_loadenv.return_value.call_args, mock.call(environment))
+        self.assertEqual(
+            self.mock_loadenv.return_value.return_value.args.call_count, 1)
+        self.assertEqual(
+            self.mock_loadenv.return_value.return_value.args.return_value[0],
+            '1')
+        self.assertRegex(
+            self.mock_loadenv.return_value.return_value.args.return_value[1],
+            r'.*require/resources/r.js$')
+        self.assertEqual(
+            self.mock_loadenv.return_value.return_value.args.return_value[2:4],
+            ['-o', 'logLevel=4'])
+        self.mock_subprocesscall.assert_called_once_with(
+            self.mock_loadenv.return_value.return_value.args.return_value)
+
+
+class OptimizedFilesMixinTest(TestCase):
+
+    """Test for OptimizedFilesMixinTest."""
+
+    def setUp(self):
+        self.optimized_mixin = OptimizedFilesMixin()
+
+    def test_post_process_returns_on_dryrun(self):
+        """
+        On dry_run=True, post_process() should return.
+        """
+        return_iterator = self.optimized_mixin.post_process(
+            'foo', dry_run=True)
+        count = 0
+        for count, item in enumerate(return_iterator):
+            pass
+        self.assertEqual(count, 0)
+
+    @override_settings(
+        REQUIRE_STANDALONE_MODULES={'a': {}}, REQUIRE_BASE_URL='js',
+        REQUIRE_BUILD_PROFILE=None)
+    def test_iterator_raises_improperlyconfigured(self):
+        paths = {
+            'file1': (mock.Mock(), 'file1'),
+            'file2': (mock.Mock(), 'file2'),
+        }
+        paths['file1'][0].open = mock.mock_open(read_data=b'file1')
+        paths['file2'][0].open = mock.mock_open(read_data=b'file2')
+        return_iterator = self.optimized_mixin.post_process(paths)
+        with self.assertRaisesMessage(
+                ImproperlyConfigured,
+                'No \'out\' option specified for module \'a\' in '
+                'REQUIRE_STANDALONE_MODULES setting'):
+            count, item = enumerate(return_iterator)
+        paths['file1'][0].open.assert_called_with('file1', 'rb')
+        paths['file2'][0].open.assert_called_with('file2', 'rb')

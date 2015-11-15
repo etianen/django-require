@@ -22,11 +22,14 @@ from require.helpers import resolve_require_url
 class TemporaryCompileEnvironment(object):
 
     REQUIRE_RESOURCES_DIR = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "resources"))
+        os.path.join(os.path.dirname(__file__), 'resources'))
 
     def __init__(self, verbosity):
         self.compile_dir = tempfile.mkdtemp()
         self.build_dir = tempfile.mkdtemp()
+        if require_settings.REQUIRE_BASE_URL:
+            os.mkdir(os.path.join(
+                self.compile_dir, require_settings.REQUIRE_BASE_URL))
         self.verbosity = verbosity
 
     def resource_path(self, name):
@@ -46,12 +49,12 @@ class TemporaryCompileEnvironment(object):
         # load the environment and initialize
         compiler = load_environment()(self)
         compiler_args = compiler.args()
-        compiler_args.extend([self.resource_path("r.js"), "-o"])
+        compiler_args.extend([self.resource_path('r.js'), '-o'])
         compiler_args.extend(args)
         if self.verbosity == 0:
-            kwargs.setdefault("logLevel", "4")
+            kwargs.setdefault('logLevel', '4')
         compiler_args.extend(
-            "{0}={1}".format(
+            '{0}={1}'.format(
                 key, value
             )
             for key, value
@@ -59,7 +62,7 @@ class TemporaryCompileEnvironment(object):
         )
         # Run the compiler in a subprocess.
         if subprocess.call(compiler_args) != 0:
-            raise OptimizationError("Error while running r.js optimizer.")
+            raise OptimizationError('Error while running r.js optimizer.')
 
     def __enter__(self):
         return self
@@ -70,7 +73,6 @@ class TemporaryCompileEnvironment(object):
 
 
 class OptimizationError(Exception):
-
     pass
 
 
@@ -84,7 +86,8 @@ class OptimizedFilesMixin(object):
     def post_process(self, paths, dry_run=False, verbosity=1, **options):
         # If this is a dry run, give up now!
         if dry_run:
-            return
+            # We're an iterator, so StopIteration is valid here.
+            raise StopIteration
         # Compile in a temporary environment.
         with TemporaryCompileEnvironment(verbosity=verbosity) as env:
             exclude_names = list(require_settings.REQUIRE_EXCLUDE)
@@ -98,8 +101,8 @@ class OptimizedFilesMixin(object):
                     os.makedirs(dst_dir)
                 # Copy and generate md5
                 hash = hashlib.md5()
-                with closing(storage.open(path, "rb")) as src_handle:
-                    with open(dst_path, "wb") as dst_handle:
+                with closing(storage.open(path, 'rb')) as src_handle:
+                    with open(dst_path, 'wb') as dst_handle:
                         for block in self._file_iter(src_handle):
                             hash.update(block)
                             dst_handle.write(block)
@@ -111,7 +114,7 @@ class OptimizedFilesMixin(object):
                     app_build_js_path = env.compile_dir_path(
                         require_settings.REQUIRE_BUILD_PROFILE)
                 else:
-                    app_build_js_path = env.resource_path("app.build.js")
+                    app_build_js_path = env.resource_path('app.build.js')
                 env.run_optimizer(
                     app_build_js_path,
                     dir=env.build_dir,
@@ -121,24 +124,24 @@ class OptimizedFilesMixin(object):
             # Compile standalone modules.
             if require_settings.REQUIRE_STANDALONE_MODULES:
                 shutil.copyfile(
-                    env.resource_path("almond.js"),
-                    env.compile_dir_path("almond.js"),
+                    env.resource_path('almond.js'),
+                    env.compile_dir_path('almond.js'),
                 )
-                exclude_names.append(resolve_require_url("almond.js"))
+                exclude_names.append(resolve_require_url('almond.js'))
             for standalone_module, standalone_config in \
                     require_settings.REQUIRE_STANDALONE_MODULES.items():
-                if "out" in standalone_config:
-                    if "build_profile" in standalone_config:
+                if 'out' in standalone_config:
+                    if 'build_profile' in standalone_config:
                         module_build_js_path = env.compile_dir_path(
-                            standalone_config["build_profile"])
+                            standalone_config['build_profile'])
                     else:
                         module_build_js_path = env.resource_path(
-                            "module.build.js")
+                            'module.build.js')
                     env.run_optimizer(
                         module_build_js_path,
-                        name="almond",
+                        name='almond',
                         include=standalone_module,
-                        out=env.build_dir_path(standalone_config["out"]),
+                        out=env.build_dir_path(standalone_config['out']),
                         baseUrl=os.path.join(
                             env.compile_dir,
                             require_settings.REQUIRE_BASE_URL),
@@ -158,7 +161,7 @@ class OptimizedFilesMixin(object):
                     build_filepath = os.path.join(
                         build_dirpath, build_filename)
                     build_name = build_filepath[len(env.build_dir) + 1:]
-                    build_storage_name = build_name.replace(os.sep, "/")
+                    build_storage_name = build_name.replace(os.sep, '/')
                     # Ignore certain files.
                     if build_storage_name in exclude_names:
                         # Delete from storage, if originally present.
@@ -197,13 +200,11 @@ class OptimizedFilesMixin(object):
 
 
 class OptimizedStaticFilesStorage(OptimizedFilesMixin, StaticFilesStorage):
-
     pass
 
 
 class OptimizedCachedStaticFilesStorage(
         OptimizedFilesMixin, CachedStaticFilesStorage):
-
     pass
 
 
