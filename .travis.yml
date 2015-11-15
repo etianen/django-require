@@ -2,7 +2,7 @@ sudo: false
 language: python
 before_install:
   - travis_retry git fetch --unshallow
-  - travis_retry pip install -U pip setuptools tox-travis
+  - travis_retry pip install -U pip setuptools tox-travis coveralls
 python:
   - 2.6
   - 2.7
@@ -13,3 +13,5 @@ python:
 script: tox
 notifications:
   email: false
+after_success:
+  coveralls

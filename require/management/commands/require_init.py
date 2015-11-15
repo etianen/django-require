@@ -81,7 +81,7 @@ class Command(NoArgsCommand):
             if os.path.exists(dst_path) and not options['force']:
                 if verbosity > 0:
                     self.stdout.write(
-                        '{} already exists, skipping.\n'.format(dst_path))
+                        '{0} already exists, skipping.\n'.format(dst_path))
             else:
                 dst_dirname = os.path.dirname(dst_path)
                 if not os.path.exists(dst_dirname):
@@ -90,4 +90,4 @@ class Command(NoArgsCommand):
                     os.path.join(resources_dir, resource_name), dst_path)
                 if verbosity > 0:
                     self.stdout.write(
-                        'Copied {} to {}.\n'.format(resource_name, dst_path))
+                        'Copied {0} to {1}.\n'.format(resource_name, dst_path))
