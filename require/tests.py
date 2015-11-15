@@ -6,7 +6,6 @@ import subprocess
 import tempfile
 import unittest
 
-import mock
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import base, call_command
@@ -17,6 +16,13 @@ from require.environments import AutoEnvironment, Environment
 from require.storage import (
     OptimizationError, OptimizedFilesMixin, TemporaryCompileEnvironment)
 from require.templatetags.require import require_module
+
+# https://bugs.python.org/issue23004 was not fixed in the external mock
+# module, which is a py35 bug only, but the internal mock is okay
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 WORKING_DIR = tempfile.mkdtemp()
 WORKING_DIR2 = tempfile.mkdtemp()
@@ -474,8 +480,8 @@ class OptimizedFilesMixinTest(TestCase):
             'js/file1': (mock.Mock(), 'js/file1'),
             'js/file2': (mock.Mock(), 'js/file2'),
         }
-        paths['js/file1'][0].open = mock.mock_open(read_data=b'js/file1')
-        paths['js/file2'][0].open = mock.mock_open(read_data=b'js/file2')
+        paths['js/file1'][0].open = mock.mock_open(read_data=b'file1\ncontent')
+        paths['js/file2'][0].open = mock.mock_open(read_data=b'file2\ncontent')
         return_iterator = self.optimized_mixin.post_process(paths)
         with self.assertRaisesMessage(
                 ImproperlyConfigured,
