@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-import sys
+# import sys
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core.exceptions import ImproperlyConfigured
@@ -20,9 +20,10 @@ from require.templatetags.require import require_module
 
 # https://bugs.python.org/issue23004 was not fixed in the external mock
 # module, which is a py35 bug only, but the internal mock is okay
-if sys.version_info[0:2] == (3, 5):
+# if sys.version_info[0:2] == (3, 5):
+try:
     from unittest import mock
-else:
+except ImportError:
     import mock
 
 WORKING_DIR = tempfile.mkdtemp()
