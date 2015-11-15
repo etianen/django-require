@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import sys
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core.exceptions import ImproperlyConfigured
@@ -19,9 +20,9 @@ from require.templatetags.require import require_module
 
 # https://bugs.python.org/issue23004 was not fixed in the external mock
 # module, which is a py35 bug only, but the internal mock is okay
-try:
+if sys.version_info[0:2] == (3, 5):
     from unittest import mock
-except ImportError:
+else:
     import mock
 
 WORKING_DIR = tempfile.mkdtemp()
@@ -81,7 +82,7 @@ class RequireInitTest(WorkingDirMixin, TestCase):
                 WORKING_DIR, require_settings.REQUIRE_BASE_URL,
                 'require.js')))
         self.assertEqual(mock_stdout_write.call_count, 1)
-        self.assertRegex(
+        self.assertRegexpMatches(
             mock_stdout_write.call_args[0][0],
             r'.*require.js already exists, skipping\.\n$')
 
@@ -444,7 +445,7 @@ class TemporaryCompileEnvironmentTest(TestCase):
         self.assertEqual(
             self.mock_loadenv.return_value.return_value.args.return_value[0],
             '1')
-        self.assertRegex(
+        self.assertRegexpMatches(
             self.mock_loadenv.return_value.return_value.args.return_value[1],
             r'.*require/resources/r.js$')
         self.assertEqual(
