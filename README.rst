@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/karolyi/django-require.svg?branch=master)](https://travis-ci.org/karolyi/django-require)
+[![Coverage Status](https://coveralls.io/repos/karolyi/django-require/badge.svg?branch=master&service=github)](https://coveralls.io/github/karolyi/django-require?branch=master)
+
 django-require
 ==============
 
