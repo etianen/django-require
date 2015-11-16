@@ -75,7 +75,7 @@ class OptimizationError(Exception):
 class OptimizedFilesMixin(object):
 
     REQUIRE_COPY_BLOCK_SIZE = 1024 * 1024  # 1 MB.
-    compile_info = {}
+    files_md5 = {}
     env = None
     paths = {}
     compiled_storage = None
@@ -83,9 +83,11 @@ class OptimizedFilesMixin(object):
     def _file_iter(self, handle):
         yield handle.read(self.REQUIRE_COPY_BLOCK_SIZE)
 
-    def _configure(self):
-        self.exclude_names = list(require_settings.REQUIRE_EXCLUDE)
-        # Copy all assets into the compile dir.
+    def _prepare_assets(self):
+        """
+        Copy all assets into the compile dir, while calculating and
+        storing their MD5 hashes.
+        """
         for name, storage_details in self.paths.items():
             storage, path = storage_details
             dst_path = os.path.join(self.env.compile_dir, name)
@@ -100,7 +102,7 @@ class OptimizedFilesMixin(object):
                         hash_md5.update(block)
                         dst_handle.write(block)
             # Store md5 hash of file.
-            self.compile_info[name] = hash_md5.digest()
+            self.files_md5[name] = hash_md5.digest()
 
     def _run_optimizer(self):
         if require_settings.REQUIRE_BUILD_PROFILE is False:
@@ -126,27 +128,35 @@ class OptimizedFilesMixin(object):
             self.exclude_names.append(resolve_require_url('almond.js'))
 
     def _iterate_standalones(self, standalone_module, standalone_config):
-        if 'out' in standalone_config:
-            if 'build_profile' in standalone_config:
-                module_build_js_path = self.env.compile_dir_path(
-                    standalone_config['build_profile'])
-            else:
-                module_build_js_path = self.env.resource_path(
-                    'module.build.js')
-            self.env.run_optimizer(
-                module_build_js_path,
-                name='almond',
-                include=standalone_module,
-                out=self.env.build_dir_path(standalone_config['out']),
-                baseUrl=os.path.join(
-                    self.env.compile_dir,
-                    require_settings.REQUIRE_BASE_URL))
-        else:
+        if 'out' not in standalone_config:
+            # No out section, early exit.
             raise ImproperlyConfigured(
                 'No \'out\' option specified for module \'{module}\' '
                 'in REQUIRE_STANDALONE_MODULES setting.'.format(
                     module=standalone_module
                 ))
+        relative_baseurl = standalone_config.get('relative_baseurl', '')
+        if 'build_profile' in standalone_config:
+            module_build_js_path = self.env.compile_dir_path(os.path.join(
+                relative_baseurl, standalone_config['build_profile']))
+        else:
+            module_build_js_path = self.env.resource_path(
+                'module.build.js')
+        entry_file_name = standalone_config.get('entry_file_name')
+        if entry_file_name is not None:
+            entry_file_name = os.path.join(relative_baseurl, entry_file_name)
+        else:
+            entry_file_name = standalone_module
+        self.env.run_optimizer(
+            module_build_js_path,
+            name='almond',
+            include=entry_file_name,
+            out=self.env.build_dir_path(
+                os.path.join(relative_baseurl, standalone_config['out'])),
+            baseUrl=os.path.join(
+                self.env.compile_dir,
+                require_settings.REQUIRE_BASE_URL,
+                relative_baseurl))
 
     def _check_if_modified(self, build_dirpath, build_filename):
         # Determine asset name.
@@ -156,7 +166,7 @@ class OptimizedFilesMixin(object):
         # Ignore certain files.
         if build_storage_name in self.exclude_names:
             # Delete from storage, if originally present.
-            if build_name in self.compile_info:
+            if build_name in self.files_md5:
                 del self.paths[build_name]
                 self.delete(build_storage_name)
             return
@@ -169,9 +179,9 @@ class OptimizedFilesMixin(object):
                 hash_md5.update(block)
             build_handle.seek(0)
             # Check if the asset has been modifed.
-            if build_name in self.compile_info:
+            if build_name in self.files_md5:
                 # Get the hash of the new file.
-                if hash_md5.digest() == self.compile_info[build_name]:
+                if hash_md5.digest() == self.files_md5[build_name]:
                     return
             # If we're here, then the asset has been modified by
             # the build script! Time to re-save it!
@@ -183,7 +193,7 @@ class OptimizedFilesMixin(object):
             return build_name, build_name, True
 
     def _run_post_process(self, paths, dry_run, options):
-        self._configure()
+        self._prepare_assets()
 
         # Run the optimizer.
         self._run_optimizer()
@@ -220,6 +230,7 @@ class OptimizedFilesMixin(object):
         with TemporaryCompileEnvironment(verbosity=verbosity) as env:
             self.env = env
             self.paths = paths
+            self.exclude_names = list(require_settings.REQUIRE_EXCLUDE)
             return self._run_post_process(paths, dry_run, options)
 
 

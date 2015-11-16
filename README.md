@@ -72,9 +72,11 @@ Generating build profiles
 In almost all cases, you'll want to create a custom build profile for
 your project. To help you get started, django-require can generate a
 default build profile into your `STATICFILES_DIRS`. Just set your
-`REQUIRE_BUILD_PROFILE` setting to a build profile name, and run `require_init`. A good name for a build profile would be `'app.build.js'`.
+`REQUIRE_BUILD_PROFILE` setting to a build profile name, and run
+`require_init`. A good name for a build profile would be `'app.build.js'`.
 
-Any standalone modules that your specify with a build profile will also have a default build profile generated when you run this command.
+Any standalone modules that you specify with a build profile will also
+have a default build profile generated when you run this command.
 
 Running javascript modules in templates
 ---------------------------------------

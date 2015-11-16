@@ -1,24 +1,24 @@
 /**
  * Build profile for a standalone django-require module, packaged with almond.js.
- * 
+ *
  * This supports all the normal configuration available to a r.js build profile. The only gotchas are:
  *
  *   - 'baseUrl' will be overidden by django-require during the build process.
  *   - 'name' will be overidden by django-require during the build process.
  *   - 'include' will be overidden by django-require during the build process.
- *   - 'out' will be overidden by django-require during the build process. 
+ *   - 'out' will be overidden by django-require during the build process.
  */
 ({
-    
+
     logLevel: 4,
-    
+
     /*
      * Wraps the module in an anonymous function to remove require() and define()
      * from the global namespace. Set to false if you wish to use these functions
      * outside of your standalone module.
-     */ 
+     */
     wrap: true,
-    
+
     /*
      * How to optimize all the JS files in the build output directory.
      * Right now only the following values are supported:
@@ -29,7 +29,7 @@
      * - "none": No minification will be done.
      */
     optimize: "closure",
-    
+
     /*
      * By default, comments that have a license in them are preserved in the
      * output. However, for a larger built files there could be a lot of
@@ -39,5 +39,5 @@
      * work out how best to surface the license information.
      */
     preserveLicenseComments: true
-    
+
 })
