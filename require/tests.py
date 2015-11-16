@@ -455,9 +455,9 @@ class OptimizedFilesMixinTest(TestCase):
     def setUp(self):
         self.optimized_mixin = OptimizedFilesMixin()
 
-    def test_post_process_returns_on_dryrun(self):
+    def test_post_process_raises_stopiteration(self):
         """
-        On dry_run=True, post_process() should return.
+        On dry_run=True, post_process() should return an empty iterator.
         """
         return_iterator = self.optimized_mixin.post_process(
             'foo', dry_run=True)
