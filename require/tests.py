@@ -262,12 +262,10 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
                 REQUIRE_STANDALONE_MODULES=self.relative_entry_point_cfg,
                 REQUIRE_BUILD_PROFILE=False):
             call_command('collectstatic', interactive=False, verbosity=0)
-            self.assertTrue(
-                os.path.exists(
-                    staticfiles_storage.path('js/skin_first/main1-built.js')))
-            self.assertTrue(
-                os.path.exists(
-                    staticfiles_storage.path('js/skin_second/main2-built.js')))
+            self.assertTrue(os.path.exists(
+                staticfiles_storage.path('js/skin_first/main1-built.js')))
+            self.assertTrue(os.path.exists(
+                staticfiles_storage.path('js/skin_second/main2-built.js')))
 
     @override_settings(
         REQUIRE_BUILD_PROFILE=None,
