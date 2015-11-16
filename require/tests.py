@@ -160,21 +160,6 @@ class RequireModuleTest(TestCase):
 
 class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
 
-    relative_entry_point_cfg = {
-        'skin-1': {
-            'relative_baseurl': 'skin_first',
-            'entry_file_name': 'common1.js',
-            'out': 'main1-built.js',
-            'build_profile': 'common1.build.js',
-        },
-        'skin-2': {
-            'relative_baseurl': 'skin_second',
-            'entry_file_name': 'common2.js',
-            'out': 'main2-built.js',
-            'build_profile': 'common2.build.js',
-        }
-    }
-
     def __init__(self, *args, **kwargs):
         super(OptimizedStaticFilesStorageTestsMixin, self).__init__(
             *args, **kwargs)
@@ -220,11 +205,13 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
         )
 
     def _prepare_standalone_modules(self):
-        shutil.copyfile(
-            os.path.join(
-                self.test_resources_dir, self.test_standalone_build_profile),
-            os.path.join(WORKING_DIR, 'js', 'main.build.js'),
-        )
+        shutil.copytree
+        shutil.copytree(
+            os.path.join(self.test_resources_dir, 'skin_first'),
+            os.path.join(WORKING_DIR, 'js', 'skin_first'))
+        shutil.copytree(
+            os.path.join(self.test_resources_dir, 'skin_second'),
+            os.path.join(WORKING_DIR, 'js', 'skin_second'))
 
     @override_settings(
         REQUIRE_STANDALONE_MODULES={}, REQUIRE_BUILD_PROFILE=None)
@@ -273,17 +260,21 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
         with self.settings(
                 REQUIRE_ENVIRONMENT=self.require_environment,
                 REQUIRE_STANDALONE_MODULES=self.relative_entry_point_cfg,
-                REQUIRE_BUILD_PROFILE=None):
+                REQUIRE_BUILD_PROFILE=False):
             call_command('collectstatic', interactive=False, verbosity=0)
             self.assertTrue(
-                os.path.exists(staticfiles_storage.path('js/main-built.js')))
+                os.path.exists(
+                    staticfiles_storage.path('js/skin_first/main1-built.js')))
+            self.assertTrue(
+                os.path.exists(
+                    staticfiles_storage.path('js/skin_second/main2-built.js')))
 
     @override_settings(
         REQUIRE_BUILD_PROFILE=None,
         REQUIRE_STANDALONE_MODULES={
             'main': {
                 'out': 'main-built.js', 'build_profile': 'main.build.js'}})
-    def testExtraPostProcess(self):
+    def test_extra_post_process(self):
         def post_process(self, paths, *args, **kwargs):
             return ((x, x, True) for x in paths.keys())
         import django
@@ -308,7 +299,7 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
             'main': {
                 'out': 'main-built.js', 'build_profile': 'main.build.js'}},
         REQUIRE_EXCLUDE=('js/util.js',))
-    def testCollectStaticStandaloneBuildProfileWithExcludedFile(self):
+    def test_collect_static_standalone_build_profile_with_excluded_file(self):
         shutil.copyfile(
             os.path.join(
                 self.test_resources_dir, self.test_standalone_build_profile),
@@ -326,7 +317,7 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
         REQUIRE_STANDALONE_MODULES={
             'main': {
                 'out': 'main-built.js', 'build_profile': 'main.build.js'}})
-    def testCollectStaticNoBuildProfile(self):
+    def test_collect_static_no_build_profile(self):
         """
         Test if an original file ends up in the collected dir
         unmodified.
@@ -360,6 +351,21 @@ class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
 class OptimizedStaticFilesStorageNodeTest(
         OptimizedStaticFilesStorageTestsMixin, TestCase):
 
+    relative_entry_point_cfg = {
+        'skin-1': {
+            'relative_baseurl': 'skin_first',
+            'entry_file_name': 'common1.js',
+            'out': 'main1-built.js',
+            'build_profile': 'common1.build.js',
+        },
+        'skin-2': {
+            'relative_baseurl': 'skin_second',
+            'entry_file_name': 'common2.js',
+            'out': 'main2-built.js',
+            'build_profile': 'common2.build.js',
+        }
+    }
+
     require_environment_detection_args = ('node', '-v')
 
     require_environment = 'node'
@@ -377,6 +383,22 @@ class OptimizedStaticFilesStorageNodeTest(
     REQUIRE_JS='require.js', REQUIRE_BASE_URL='js')
 class OptimizedStaticFilesStorageRhinoTest(
         OptimizedStaticFilesStorageTestsMixin, TestCase):
+
+    relative_entry_point_cfg = {
+        'skin-1': {
+            'relative_baseurl': 'skin_first',
+            'entry_file_name': 'common1.js',
+            'out': 'main1-built.js',
+            'build_profile': 'common1-closure.build.js',
+        },
+        'skin-2': {
+            'relative_baseurl': 'skin_second',
+            'entry_file_name': 'common2.js',
+            'out': 'main2-built.js',
+            'build_profile': 'common2-closure.build.js',
+        }
+    }
+
     require_environment_detection_args = ('java', '-version')
 
     require_environment = 'rhino'
@@ -432,7 +454,7 @@ class AutoEnvironmentTest(TestCase):
         with self.assertRaises(NotImplementedError):
             super(AutoEnvironment, self.auto_environment).args()
 
-    def tests_serves_an_environment(self):
+    def test_serves_an_environment(self):
         """
         Test if the enviroment cached property serves us an environment.
         """

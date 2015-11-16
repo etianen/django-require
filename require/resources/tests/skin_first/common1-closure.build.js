@@ -28,7 +28,7 @@
      * mode to minify the code. Only available if REQUIRE_ENVIRONMENT is "rhino" (the default).
      * - "none": No minification will be done.
      */
-    optimize: "uglify2",
+    optimize: 'closure',
 
     /*
      * By default, comments that have a license in them are preserved in the
@@ -38,6 +38,8 @@
      * This option will turn off the auto-preservation, but you will need
      * work out how best to surface the license information.
      */
-    preserveLicenseComments: true
-
+    preserveLicenseComments: true,
+    include: [
+        'testdir/util'
+    ]
 })

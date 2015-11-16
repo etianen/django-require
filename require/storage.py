@@ -120,12 +120,16 @@ class OptimizedFilesMixin(object):
         )
 
     def _setup_if_standalone(self):
-        if require_settings.REQUIRE_STANDALONE_MODULES:
+        if not require_settings.REQUIRE_STANDALONE_MODULES:
+            return
+        for key, value in require_settings.REQUIRE_STANDALONE_MODULES.items():
+            relative_baseurl = value.get('relative_baseurl', '')
+            almond_path = os.path.join(relative_baseurl, 'almond.js')
             shutil.copyfile(
                 self.env.resource_path('almond.js'),
-                self.env.compile_dir_path('almond.js'),
+                self.env.compile_dir_path(almond_path),
             )
-            self.exclude_names.append(resolve_require_url('almond.js'))
+            self.exclude_names.append(resolve_require_url(almond_path))
 
     def _iterate_standalones(self, standalone_module, standalone_config):
         if 'out' not in standalone_config:
@@ -143,9 +147,7 @@ class OptimizedFilesMixin(object):
             module_build_js_path = self.env.resource_path(
                 'module.build.js')
         entry_file_name = standalone_config.get('entry_file_name')
-        if entry_file_name is not None:
-            entry_file_name = os.path.join(relative_baseurl, entry_file_name)
-        else:
+        if entry_file_name is None:
             entry_file_name = standalone_module
         self.env.run_optimizer(
             module_build_js_path,
