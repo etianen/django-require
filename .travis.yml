@@ -11,7 +11,7 @@ python:
   - 3.5
   - pypy
 script: tox
-notifications:
-  email: false
+# notifications:
+#   email: false
 after_success:
   coveralls
