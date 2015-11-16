@@ -45,7 +45,11 @@ class RhinoEnvironment(Environment):
                 self.env.resource_path('js.jar'),
                 self.env.resource_path('compiler.jar'),
             )),
-            'org.mozilla.javascript.tools.shell.Main'
+            'org.mozilla.javascript.tools.shell.Main',
+            # -opt -1 is needed, otherwise rhino will fail. See
+            # http://fantom.org/forum/topic/1181
+            '-opt',
+            '-1'
         ]
 
 
