@@ -23,6 +23,6 @@ def resolve_require_url(name):
 
 
 def resolve_require_module(name):
-    if not posixpath.splitext(name)[-1].lower() == ".js":
-        name += ".js"
+    if posixpath.splitext(name)[-1].lower() != '.js':
+        name += '.js'
     return resolve_require_url(name)

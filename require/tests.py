@@ -142,11 +142,11 @@ class RequireModuleTest(TestCase):
     @override_settings(REQUIRE_STANDALONE_MODULES={})
     def test_require_module(self):
         self.assertHTMLEqual(
-            require_module('main'),
-            '<script src="{0}" data-main="{1}"></script>'.format(
+            require_module('main'), (
+                '<script type="text/javascript" src="{0}" data-main="{1}">'
+                '</script>').format(
                 staticfiles_storage.url('js/require.js'),
-                staticfiles_storage.url('js/main.js'),
-            ))
+                staticfiles_storage.url('js/main.js')))
 
     @override_settings(
         REQUIRE_DEBUG=False,
@@ -154,8 +154,85 @@ class RequireModuleTest(TestCase):
     def test_standalone_require_module(self):
         self.assertHTMLEqual(
             require_module('main'),
-            '<script src="{0}"></script>'.format(
-                staticfiles_storage.url('js/main-built.js'),))
+            '<script type="text/javascript" src="{0}"></script>'.format(
+                staticfiles_storage.url('js/main-built.js')))
+
+    @override_settings(
+        REQUIRE_DEBUG=True,
+        REQUIRE_STANDALONE_MODULES={'skin-1': {
+            'relative_baseurl': 'skin_first',
+            'entry_file_name': 'common1.js',
+            'devel_tag': 'separate_tag',
+            'out': 'skin1-built.js',
+            'build_profile': 'common1-closure.build.js'}})
+    def test_standalone_debug_separate(self):
+        self.assertHTMLEqual(
+            require_module('skin-1'), (
+                '<script type="text/javascript" src="{0}"></script>'
+                '<script type="text/javascript" src="{1}"></script>').format(
+                staticfiles_storage.url('js/require.js'),
+                staticfiles_storage.url('js/skin_first/common1.js')))
+
+    @override_settings(
+        REQUIRE_DEBUG=False,
+        REQUIRE_STANDALONE_MODULES={'skin-1': {
+            'relative_baseurl': 'skin_first',
+            'entry_file_name': 'common1.js',
+            'devel_tag': 'separate_tag',
+            'out': 'skin1-built.js',
+            'build_profile': 'common1-closure.build.js'}})
+    def test_standalone_nodebug_separate(self):
+        self.assertHTMLEqual(
+            require_module('skin-1'), (
+                '<script type="text/javascript" src="{0}"></script>').format(
+                staticfiles_storage.url('js/skin_first/skin1-built.js')))
+
+    @override_settings(
+        REQUIRE_DEBUG=True,
+        REQUIRE_STANDALONE_MODULES={'skin-1': {
+            'relative_baseurl': 'skin_first',
+            'entry_file_name': 'common1.js',
+            'devel_tag': 'data_attr',
+            'out': 'skin1-built.js',
+            'build_profile': 'common1-closure.build.js'}})
+    def test_standalone_debug_data_attr(self):
+        self.assertHTMLEqual(
+            require_module('skin-1'), (
+                '<script type="text/javascript" src="{0}" data-main="{1}">'
+                '</script>').format(
+                staticfiles_storage.url('js/require.js'),
+                staticfiles_storage.url('js/skin_first/common1.js')))
+
+    @override_settings(
+        REQUIRE_DEBUG=True,
+        REQUIRE_STANDALONE_MODULES={'skin-1': {
+            'relative_baseurl': 'skin_first',
+            'entry_file_name': 'common1.js',
+            'out': 'skin1-built.js',
+            'build_profile': 'common1-closure.build.js'}})
+    def test_standalone_debug_notype(self):
+        self.assertHTMLEqual(
+            require_module('skin-1'), (
+                '<script type="text/javascript" src="{0}" data-main="{1}">'
+                '</script>').format(
+                staticfiles_storage.url('js/require.js'),
+                staticfiles_storage.url('js/skin_first/common1.js')))
+
+    @override_settings(
+        REQUIRE_DEBUG=True,
+        REQUIRE_STANDALONE_MODULES={'skin-1': {
+            'relative_baseurl': 'skin_first',
+            'entry_file_name': 'common1.js',
+            'devel_tag': 'wharrgarbl',
+            'out': 'skin1-built.js',
+            'build_profile': 'common1-closure.build.js'}})
+    def test_standalone_debug_garbled_type(self):
+        self.assertHTMLEqual(
+            require_module('skin-1'), (
+                '<script type="text/javascript" src="{0}" data-main="{1}">'
+                '</script>').format(
+                staticfiles_storage.url('js/require.js'),
+                staticfiles_storage.url('js/skin_first/common1.js')))
 
 
 class OptimizedStaticFilesStorageTestsMixin(WorkingDirMixin):
@@ -386,12 +463,14 @@ class OptimizedStaticFilesStorageRhinoTest(
         'skin-1': {
             'relative_baseurl': 'skin_first',
             'entry_file_name': 'common1.js',
+            'devel_tag': 'separate_tag',
             'out': 'main1-built.js',
             'build_profile': 'common1-closure.build.js',
         },
         'skin-2': {
             'relative_baseurl': 'skin_second',
             'entry_file_name': 'common2.js',
+            'devel_tag': 'data_attr',
             'out': 'main2-built.js',
             'build_profile': 'common2-closure.build.js',
         }
