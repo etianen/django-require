@@ -122,7 +122,7 @@ class OptimizedFilesMixin(object):
     def _setup_if_standalone(self):
         if not require_settings.REQUIRE_STANDALONE_MODULES:
             return
-        for key, value in require_settings.REQUIRE_STANDALONE_MODULES.items():
+        for _, value in require_settings.REQUIRE_STANDALONE_MODULES.items():
             relative_baseurl = value.get('relative_baseurl', '')
             almond_path = os.path.join(relative_baseurl, 'almond.js')
             shutil.copyfile(
