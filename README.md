@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/karolyi/django-require.svg?branch=master)](https://travis-ci.org/karolyi/django-require) [![Coverage Status](https://coveralls.io/repos/karolyi/django-require/badge.svg?branch=master&service=github)](https://coveralls.io/github/karolyi/django-require?branch=master)
+[![Build Status](https://travis-ci.org/karolyi/django-require.svg?branch=master)](https://travis-ci.org/karolyi/django-require) [![Coverage Status](https://coveralls.io/repos/karolyi/django-require/badge.svg?branch=master&service=github)](https://coveralls.io/github/karolyi/django-require?branch=master) [![Code Health](https://landscape.io/github/karolyi/django-require/master/landscape.svg?style=flat)](https://landscape.io/github/karolyi/django-require/master) [![PyPI](https://img.shields.io/pypi/pyversions/django-require.svg)]()
 
 django-require
 ==============
@@ -28,33 +28,32 @@ should configure this to match the layout of your project's static
 files. Please consult the [`RequireJS`](http://requirejs.org/) documentation for more information about how to build javascript using RequireJS.
 
 ```python
+# The baseUrl to pass to the r.js optimizer, relative to STATIC_ROOT.
+REQUIRE_BASE_URL = "js"
 
-    # The baseUrl to pass to the r.js optimizer, relative to STATIC_ROOT.
-    REQUIRE_BASE_URL = "js"
+# The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
+# A sensible value would be 'app.build.js'. Leave blank to use the built-in default build profile.
+# Set to False to disable running the default profile (e.g. if only using it to build Standalone
+# Modules)
+REQUIRE_BUILD_PROFILE = None
 
-    # The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
-    # A sensible value would be 'app.build.js'. Leave blank to use the built-in default build profile.
-    # Set to False to disable running the default profile (e.g. if only using it to build Standalone
-    # Modules)
-    REQUIRE_BUILD_PROFILE = None
+# The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
+REQUIRE_JS = "require.js"
 
-    # The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
-    REQUIRE_JS = "require.js"
+# A dictionary of standalone modules to build with almond.js.
+# See the section on Standalone Modules, below.
+REQUIRE_STANDALONE_MODULES = {}
 
-    # A dictionary of standalone modules to build with almond.js.
-    # See the section on Standalone Modules, below.
-    REQUIRE_STANDALONE_MODULES = {}
+# Whether to run django-require in debug mode.
+REQUIRE_DEBUG = settings.DEBUG
 
-    # Whether to run django-require in debug mode.
-    REQUIRE_DEBUG = settings.DEBUG
+# A tuple of files to exclude from the compilation result of r.js.
+REQUIRE_EXCLUDE = ("build.txt",)
 
-    # A tuple of files to exclude from the compilation result of r.js.
-    REQUIRE_EXCLUDE = ("build.txt",)
-
-    # The execution environment in which to run r.js: auto, node or rhino.
-    # auto will autodetect the environment and make use of node if available and rhino if not.
-    # It can also be a path to a custom class that subclasses require.environments.Environment and defines some "args" function that returns a list with the command arguments to execute.
-    REQUIRE_ENVIRONMENT = "auto"
+# The execution environment in which to run r.js: auto, node or rhino.
+# auto will autodetect the environment and make use of node if available and rhino if not.
+# It can also be a path to a custom class that subclasses require.environments.Environment and defines some "args" function that returns a list with the command arguments to execute.
+REQUIRE_ENVIRONMENT = "auto"
 ```
 
 Generating require.js
@@ -72,9 +71,11 @@ Generating build profiles
 In almost all cases, you'll want to create a custom build profile for
 your project. To help you get started, django-require can generate a
 default build profile into your `STATICFILES_DIRS`. Just set your
-`REQUIRE_BUILD_PROFILE` setting to a build profile name, and run `require_init`. A good name for a build profile would be `'app.build.js'`.
+`REQUIRE_BUILD_PROFILE` setting to a build profile name, and run
+`require_init`. A good name for a build profile would be `'app.build.js'`.
 
-Any standalone modules that your specify with a build profile will also have a default build profile generated when you run this command.
+Any standalone modules that you specify with a build profile will also
+have a default build profile generated when you run this command.
 
 Running javascript modules in templates
 ---------------------------------------
@@ -82,23 +83,23 @@ Running javascript modules in templates
 You can run javascript modules in templates by using the `{% require_module %}` template tag.
 
 ```html
-    <html>
-        {% load require %}
-        <head>
-            {% require_module 'main' %}
-        </head>
-        <body></body>
-    </html>
+<html>
+    {% load require %}
+    <head>
+        {% require_module 'main' %}
+    </head>
+    <body></body>
+</html>
 ```
 This template fragment would then render to something like:
 
 ```html
-    <html>
-        <head>
-            <script src="/static/js/require.js" data-main="/static/js/main.js"></script>
-        </head>
-        <body></body>
-    </html>
+<html>
+    <head>
+        <script src="/static/js/require.js" data-main="/static/js/main.js"></script>
+    </head>
+    <body></body>
+</html>
 ```
 
 If the `'main'` module was specified as a standalone module in your `REQUIRE_STANDALONE_MODULES` setting, and `REQUIRE_DEBUG` is `False`, then the template fragement would instead render as:
@@ -106,12 +107,12 @@ If the `'main'` module was specified as a standalone module in your `REQUIRE_STA
 This template fragment would then render to something like:
 
 ```html
-    <html>
-        <head>
-            <script src="/static/js/main-built.js"></script>
-        </head>
-        <body></body>
-    </html>
+<html>
+    <head>
+        <script src="/static/js/main-built.js"></script>
+    </head>
+    <body></body>
+</html>
 ```
 
 Building standalone modules
@@ -122,15 +123,15 @@ As a further optimization to your code, you can build your modules to run indepe
 To specify standalone modules, simply add them to your `REQUIRE_STANDALONE_MODULES` setting, as below:
 
 ```python
-    REQUIRE_STANDALONE_MODULES = {
-        "main": {
-            # Where to output the built module, relative to REQUIRE_BASE_URL.
-            "out": "main-built.js",
+REQUIRE_STANDALONE_MODULES = {
+    "main": {
+        # Where to output the built module, relative to REQUIRE_BASE_URL.
+        "out": "main-built.js",
 
-            # Optional: A build profile used to build this standalone module.
-            "build_profile": "main.build.js",
-        }
+        # Optional: A build profile used to build this standalone module.
+        "build_profile": "main.build.js",
     }
+}
 ```
 
 Running the r.js optmizer
@@ -150,17 +151,17 @@ Creating your own optimizing storage classes
 You can add r.js optmization to any django staticfiles storage class by using the `require.storage.OptimizedFilesMixin`. For example, to make an optimizing storage that uploads to Amazon S3 using `S3BotoStorage` from `django-storages <http://django-storages.readthedocs.org/en/latest/>`_:
 
 ```python
-    from storages.backends.s3boto import S3BotoStorage
-    from require.storage import OptimizedFilesMixin
+from storages.backends.s3boto import S3BotoStorage
+from require.storage import OptimizedFilesMixin
 
-    # S3 storage with r.js optimization.
-    class OptimizedS3BotoStorage(OptimizedFilesMixin, S3BotoStorage):
-        pass
+# S3 storage with r.js optimization.
+class OptimizedS3BotoStorage(OptimizedFilesMixin, S3BotoStorage):
+    pass
 
-    # S3 storage with r.js optimization and MD5 fingerprinting.
-    from django.contrib.staticfiles.storage import CachedFilesMixin
-    class OptimizedCachedS3BotoStorage(OptimizedFilesMixin, CachedFilesMixin, S3BotoStorage):
-        pass
+# S3 storage with r.js optimization and MD5 fingerprinting.
+from django.contrib.staticfiles.storage import CachedFilesMixin
+class OptimizedCachedS3BotoStorage(OptimizedFilesMixin, CachedFilesMixin, S3BotoStorage):
+    pass
 ```
 
 For ready-made storage classes that combine django-require with Amazon S3, check out [`django-require-s3`](https://github.com/etianen/django-require-s3).

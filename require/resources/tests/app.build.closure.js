@@ -1,16 +1,16 @@
 /**
  * Build profile for django-require.
- * 
+ *
  * This supports all the normal configuration available to a r.js build profile. The only gotchas are:
  *
  *   - 'baseUrl' will be overidden by django-require during the build process.
  *   - 'appDir' will be overidden by django-require during the build process.
- *   - 'dir' will be overidden by django-require during the build process. 
+ *   - 'dir' will be overidden by django-require during the build process.
  */
 ({
-    
+
     logLevel: 4,
-    
+
     /*
      * List the modules that will be optimized. All their immediate and deep
      * dependencies will be included in the module's file when the build is
@@ -44,7 +44,7 @@
      * - "none": No minification will be done.
      */
     optimize: "closure",
-    
+
     /*
      * By default, comments that have a license in them are preserved in the
      * output. However, for a larger built files there could be a lot of
@@ -54,7 +54,7 @@
      * work out how best to surface the license information.
      */
     preserveLicenseComments: true,
-    
+
     /*
      * The default behaviour is to optimize the build layers (the "modules"
      * section of the config) and any other JS file in the directory. However, if
@@ -64,5 +64,5 @@
      * files.
      */
     skipDirOptimize: false
-    
+
 })
