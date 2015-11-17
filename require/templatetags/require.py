@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+
 from django import template
 from django.contrib.staticfiles.storage import staticfiles_storage
 
