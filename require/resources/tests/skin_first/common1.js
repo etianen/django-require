@@ -5,5 +5,5 @@ require.config({
 });
 require(['testdir/util'], function (util) {
   util.test();
-  console.log('common1 running');
+  console.log('common in first skin running');
 });
