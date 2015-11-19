@@ -1,15 +1,17 @@
+sudo: false
 language: python
+before_install:
+  - travis_retry git fetch --unshallow
+  - travis_retry pip install -U pip setuptools tox-travis coveralls
 python:
-  - 2.7
   - 2.6
+  - 2.7
   - 3.3
-  - 3.2
-env:
-  - DJANGO=django==1.5.5
-  - DJANGO=django==1.6
-install:
-  - pip install $DJANGO
-  - python setup.py -q install
-script: cd test_project && python manage.py test require -v 2
-notifications:
-  email: false
+  - 3.4
+  - 3.5
+  - pypy
+script: tox
+# notifications:
+#   email: false
+after_success:
+  coveralls

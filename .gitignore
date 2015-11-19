@@ -13,3 +13,4 @@ build
 MANIFEST
 htmlcov
 *.egg-info
+.tox
