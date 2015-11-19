@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 A Django staticfiles post-processor for optimizing with RequireJS.
 
