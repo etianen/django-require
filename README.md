@@ -126,7 +126,7 @@ REQUIRE_STANDALONE_MODULES = {
         'relative_baseurl': 'skin_first',
 
         # The entry filename. If not specified, the section name
-        # ('standalone-1') will be  used. Not mandatory.
+        # ('standalone-1.js') will be  used. Not mandatory.
         'entry_file_name': 'common1.js',
 
         # The rendered tag type in development.
@@ -172,7 +172,7 @@ The r.js optimizer is run automatically whenever you call the `collectstatic` ma
 Creating your own optimizing storage classes
 --------------------------------------------
 
-You can add r.js optimization to any django staticfiles storage class by using the `require.storage.OptimizedFilesMixin`. For example, to make an optimizing storage that uploads to Amazon S3 using `S3BotoStorage` from `django-storages <http://django-storages.readthedocs.org/en/latest/>`_:
+You can add r.js optimization to any django staticfiles storage class by using the `require.storage.OptimizedFilesMixin`. For example, to make an optimizing storage that uploads to Amazon S3 using `S3BotoStorage` from [`django-storages`](http://django-storages.readthedocs.org/en/latest/)`:
 
 ```python
 from storages.backends.s3boto import S3BotoStorage
@@ -190,9 +190,9 @@ class OptimizedCachedS3BotoStorage(OptimizedFilesMixin, CachedFilesMixin, S3Boto
 
 For ready-made storage classes that combine django-require with Amazon S3, check out [`django-require-s3`](https://github.com/etianen/django-require-s3).
 
-Another example is when you combine `django-require` with `django-pipeline`:
+Another example is when you combine `django-require` with [`django-pipeline`](https://github.com/cyberdelia/django-pipeline):
 
-Create `yourmodule.storage.py`:
+Create `yourmodule/storage.py`:
 ```python
 from pipeline.storage import PipelineMixin
 from require.storage import OptimizedFilesMixin
@@ -242,13 +242,13 @@ usually find him on the Internet in a number of different places:
 -  [Twitter](http://twitter.com/etianen)
 -  [Google Profile](http://www.google.com/profiles/david.etianen)
 
-A massive upgrade was done by László Károlyi. For details about him, see the following links:
+A V2.0.0 upgrade was done by László Károlyi. For details about him, see the following links:
 
 - [Linkedin](https://linkedin.com/in/karolyi)
 - [GitHub](https://github.com/karolyi)
 - [Google Plus](https://plus.google.com/+LaszloKAROLYI)
 
-This included:
+The upgrade included:
 
 - Raising tests coverage
 - Adding `flake8` and `isort` with `tox`
