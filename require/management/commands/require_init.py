@@ -72,7 +72,9 @@ class Command(NoArgsCommand):
                 require_settings.REQUIRE_STANDALONE_MODULES.values():
             if 'build_profile' in standalone_config:
                 resources.append(
-                    ('module.build.js', standalone_config['build_profile']))
+                    ('module.build.js', os.path.join(
+                        standalone_config.get('relative_baseurl', ''),
+                        standalone_config['build_profile'])))
         # Check if the file exists.
         for resource_name, dst_name in resources:
             dst_path = os.path.abspath(

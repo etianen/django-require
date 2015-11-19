@@ -7,11 +7,11 @@ django-require
 [`RequireJS`](http://requirejs.org/).
 
 Features
---------
+------------
 
--  Optimize your static assets using the excellent r.js optimizer.
--  Compile standalone modules using the [`almond.js`](https://github.com/jrburke/almond) shim.
--  Compatible with any Django staticfiles storage backend.
+- Optimize your static assets using the excellent r.js optimizer.
+- Compile *multiple* standalone modules using the [`almond.js`](https://github.com/jrburke/almond) shim, having their entry points configured in relative directories.
+- Compatible with any Django staticfiles storage backend.
 
 Installation
 ------------
@@ -29,7 +29,7 @@ files. Please consult the [`RequireJS`](http://requirejs.org/) documentation for
 
 ```python
 # The baseUrl to pass to the r.js optimizer, relative to STATIC_ROOT.
-REQUIRE_BASE_URL = "js"
+REQUIRE_BASE_URL = 'js'
 
 # The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
 # A sensible value would be 'app.build.js'. Leave blank to use the built-in default build profile.
@@ -38,7 +38,7 @@ REQUIRE_BASE_URL = "js"
 REQUIRE_BUILD_PROFILE = None
 
 # The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
-REQUIRE_JS = "require.js"
+REQUIRE_JS = 'require.js'
 
 # A dictionary of standalone modules to build with almond.js.
 # See the section on Standalone Modules, below.
@@ -48,12 +48,12 @@ REQUIRE_STANDALONE_MODULES = {}
 REQUIRE_DEBUG = settings.DEBUG
 
 # A tuple of files to exclude from the compilation result of r.js.
-REQUIRE_EXCLUDE = ("build.txt",)
+REQUIRE_EXCLUDE = ('build.txt',)
 
 # The execution environment in which to run r.js: auto, node or rhino.
 # auto will autodetect the environment and make use of node if available and rhino if not.
-# It can also be a path to a custom class that subclasses require.environments.Environment and defines some "args" function that returns a list with the command arguments to execute.
-REQUIRE_ENVIRONMENT = "auto"
+# It can also be a path to a custom class that subclasses require.environments.Environment and defines some 'args' function that returns a list with the command arguments to execute.
+REQUIRE_ENVIRONMENT = 'auto'
 ```
 
 Generating require.js
@@ -69,13 +69,9 @@ Generating build profiles
 -------------------------
 
 In almost all cases, you'll want to create a custom build profile for
-your project. To help you get started, django-require can generate a
-default build profile into your `STATICFILES_DIRS`. Just set your
-`REQUIRE_BUILD_PROFILE` setting to a build profile name, and run
-`require_init`. A good name for a build profile would be `'app.build.js'`.
+your project. To help you get started, django-require can generate a default build profile into your `STATICFILES_DIRS`. Just set your `REQUIRE_BUILD_PROFILE` setting to a build profile name, and run `require_init`. A good name for a build profile would be `'app.build.js'`.
 
-Any standalone modules that you specify with a build profile will also
-have a default build profile generated when you run this command.
+Any standalone modules that you specify with a build profile will also have a default build profile generated when you run this command.
 
 Running javascript modules in templates
 ---------------------------------------
@@ -124,14 +120,42 @@ To specify standalone modules, simply add them to your `REQUIRE_STANDALONE_MODUL
 
 ```python
 REQUIRE_STANDALONE_MODULES = {
-    "main": {
-        # Where to output the built module, relative to REQUIRE_BASE_URL.
-        "out": "main-built.js",
+    'standalone-1': {
+        # Your module's base URL, relative to REQUIRE_BASE_URL.
+        # Not mandatory.
+        'relative_baseurl': 'skin_first',
 
-        # Optional: A build profile used to build this standalone module.
-        "build_profile": "main.build.js",
+        # The entry filename. If not specified, the section name
+        # ('standalone-1') will be  used. Not mandatory.
+        'entry_file_name': 'common1.js',
+
+        # The rendered tag type in development.
+        # 'separate_tag': results in two separate <script> tags: one for
+        # RequireJS itself, the second for your 'entry_file_name' script.
+        # 'data_attr': results in one tag with data-attr pointing
+        # to your 'entry_file_name' script.
+        'devel_tag': 'separate_tag',
+
+        # Where to output the built module, relative to
+        # REQUIRE_BASE_URL + 'relative_baseurl'.
+        'out': 'main-built.js',
+
+        # A build profile used to build this standalone module.
+        'build_profile': 'main.build.js',
     }
 }
+```
+If you use `separate_tag` in the `devel_tag` option, it is advised that you explicitly define the module name **and** in `baseUrl` your `entry_file_name`. Example:
+```javascript
+/*global require, define */
+'use strict';
+require.config({
+  baseUrl: '/static/js/skin_first'
+});
+define('common1', ['testdir/util'], function (util) {
+  util.test();
+  console.log('common in first skin running');
+});
 ```
 
 Running the r.js optmizer
@@ -141,14 +165,14 @@ The r.js optimizer is run automatically whenever you call the `collectstatic` ma
 
 `django-require` provides three storage classes that are ready to use with the r.js optimizer:
 
--  `require.storage.OptimizedStaticFilesStorage` - A filesystem-based storage that runs the r.js optimizer.
--  `require.storage.OptimizedCachedStaticFilesStorage` - As above, but fingerprints all files with an MD5 hash of their contents for HTTP cache-busting.
--  `require.storage.OptimizedManifestStaticFilesStorage` - As above, but fingerprints all files with an MD5 hash of their contents for HTTP cache-busting and stores the fingerprints in a JSON file on disk instead of using a cache. Please note that the `OptimizedManifestStaticFilesStorage` is only available in Django 1.7 and above.
+- `require.storage.OptimizedStaticFilesStorage` - A filesystem-based storage that runs the r.js optimizer.
+- `require.storage.OptimizedCachedStaticFilesStorage` - As above, but fingerprints all files with an MD5 hash of their contents for HTTP cache-busting.
+- `require.storage.OptimizedManifestStaticFilesStorage` - As above, but fingerprints all files with an MD5 hash of their contents for HTTP cache-busting and stores the fingerprints in a JSON file on disk instead of using a cache. Please note that the `OptimizedManifestStaticFilesStorage` is only available in Django 1.7 and above.
 
 Creating your own optimizing storage classes
 --------------------------------------------
 
-You can add r.js optmization to any django staticfiles storage class by using the `require.storage.OptimizedFilesMixin`. For example, to make an optimizing storage that uploads to Amazon S3 using `S3BotoStorage` from `django-storages <http://django-storages.readthedocs.org/en/latest/>`_:
+You can add r.js optimization to any django staticfiles storage class by using the `require.storage.OptimizedFilesMixin`. For example, to make an optimizing storage that uploads to Amazon S3 using `S3BotoStorage` from `django-storages <http://django-storages.readthedocs.org/en/latest/>`_:
 
 ```python
 from storages.backends.s3boto import S3BotoStorage
@@ -166,19 +190,37 @@ class OptimizedCachedS3BotoStorage(OptimizedFilesMixin, CachedFilesMixin, S3Boto
 
 For ready-made storage classes that combine django-require with Amazon S3, check out [`django-require-s3`](https://github.com/etianen/django-require-s3).
 
+Another example is when you combine `django-require` with `django-pipeline`:
+
+Create `yourmodule.storage.py`:
+```python
+from pipeline.storage import PipelineMixin
+from require.storage import OptimizedFilesMixin
+from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
+
+
+class MyStorage(
+        PipelineMixin, OptimizedFilesMixin, ManifestStaticFilesStorage):
+    pass
+```
+
+And then in your `settings.py`, use it:
+```python
+STATICFILES_STORAGE = 'yourmodule.storage.MyStorage'
+```
+
 Tests
 -----
 
-You can run the test suite from the root of the source checkout:
+You can run the test suite from the root of the source checkout, using [tox](https://tox.readthedocs.org/en/latest/):
 
-    test_project/manage.py test require
+    tox -e py35-django18
 
-Test coverage reports can be generated from the same directory with:
+For the available environments, consult `tox.ini`.
 
-    coverage run --source='.' test_project/manage.py test require
-    coverage html
+Test coverage reports will be automatically generated via `tox` testruns, however if you want to see the HTML output, run `coverage html` after the tests finished.
 
-Open `htmlcov/index.html` in a browser to see the HTML coverage report.
+Then, open `htmlcov/index.html` in a browser to see the HTML coverage report.
 
 Support and announcements
 -------------------------
@@ -199,3 +241,19 @@ usually find him on the Internet in a number of different places:
 -  [Website](http://www.etianen.com/)
 -  [Twitter](http://twitter.com/etianen)
 -  [Google Profile](http://www.google.com/profiles/david.etianen)
+
+A massive upgrade was done by László Károlyi. For details about him, see the following links:
+
+- [Linkedin](https://linkedin.com/in/karolyi)
+- [GitHub](https://github.com/karolyi)
+- [Google Plus](https://plus.google.com/+LaszloKAROLYI)
+
+This included:
+
+- Raising tests coverage
+- Adding `flake8` and `isort` with `tox`
+- Upgrading `.travis.yml` to use `tox`
+- Adding the options `relative_baseurl`, `entry_file_name` and `devel_tag`
+- Refactoring code parts
+- Adding various badges
+- Updating resources
