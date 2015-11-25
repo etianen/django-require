@@ -1,6 +1,13 @@
 django-require changelog
 ========================
 
+1.0.9 - xx/xx/xxxx
+------------------
+
+* Updating requirejs to 2.1.22 (@thijstriemstra).
+* Updating r.js to 2.1.22 (@thijstriemstra).
+
+
 1.0.8 - 30/06/2015
 ------------------
 
