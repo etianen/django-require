@@ -1,12 +1,11 @@
 language: python
 python:
   - 2.7
-  - 2.6
+  - 3.4
   - 3.3
-  - 3.2
 env:
-  - DJANGO=django==1.5.5
-  - DJANGO=django==1.6
+  - DJANGO=django==1.8.7
+  - DJANGO=django==1.7.11
 install:
   - pip install $DJANGO
   - python setup.py -q install
