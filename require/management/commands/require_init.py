@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import os.path, shutil
 from optparse import make_option
 
-from django.core.management.base import NoArgsCommand, CommandError
+from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
 from require.conf import settings as require_settings
@@ -16,7 +16,7 @@ def default_staticfiles_dir():
     return staticfiles_dirs[0]
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     
     help = (
         "Copies the base require.js file into your STATICFILES_DIRS.\n\n"
@@ -24,7 +24,7 @@ class Command(NoArgsCommand):
         "and REQUIRE_STANDALONE_MODULES settings."
     )
     
-    option_list = NoArgsCommand.option_list + (
+    option_list = BaseCommand.option_list + (
         make_option(
             "-f",
             "--force",
@@ -44,7 +44,7 @@ class Command(NoArgsCommand):
     
     requires_model_validation = False
     
-    def handle_noargs(self, **options):
+    def handle(self, **options):
         verbosity = int(options.get("verbosity", 1))
         # Calculate the destination dir.
         dst_dir = options["dir"] or default_staticfiles_dir()
