@@ -58,8 +58,10 @@ RequireJS.
     REQUIRE_EXCLUDE = ("build.txt",)
 
     # The execution environment in which to run r.js: auto, node or rhino.
-    # auto will autodetect the environment and make use of node if available and rhino if not.
-    # It can also be a path to a custom class that subclasses require.environments.Environment and defines some "args" function that returns a list with the command arguments to execute.
+    # auto will auto-detect the environment and make use of node if available and rhino if not.
+    # It can also be a path to a custom class that subclasses
+    # require.environments.Environment and defines some "args" function that
+    # returns a list with the command arguments to execute.
     REQUIRE_ENVIRONMENT = "auto"
 
 Generating require.js
@@ -116,7 +118,7 @@ This template fragment would then render to something like:
 
 If the ``'main'`` module was specified as a standalone module in your
 ``REQUIRE_STANDALONE_MODULES`` setting, and ``REQUIRE_DEBUG`` is
-``False``, then the template fragement would instead render as:
+``False``, then the template fragment would instead render as:
 
 This template fragment would then render to something like:
 
@@ -153,8 +155,8 @@ To specify standalone modules, simply add them to your
         }
     }
 
-Running the r.js optmizer
--------------------------
+Running the r.js optimizer
+--------------------------
 
 The r.js optimizer is run automatically whenever you call the
 ``collectstatic`` management command. The optimizer is run as a
@@ -178,7 +180,7 @@ the r.js optimizer:
 Creating your own optimizing storage classes
 --------------------------------------------
 
-You can add r.js optmization to any django staticfiles storage class by
+You can add r.js optimization to any Django staticfiles storage class by
 using the ``require.storage.OptimizedFilesMixin``. For example, to make
 an optimizing storage that uploads to Amazon S3 using ``S3BotoStorage``
 from
