@@ -1,9 +1,10 @@
 django-require changelog
 ========================
 
-1.0.9 - xx/xx/xxxx
+1.0.9 - 04/01/2016
 ------------------
 
+* Fixing deprecation warnings for Django 1.9 (@thijstriemstra, @MiguelSR).
 * Updating requirejs to 2.1.22 (@thijstriemstra).
 * Updating r.js to 2.1.22 (@thijstriemstra).
 
