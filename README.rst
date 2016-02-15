@@ -206,7 +206,7 @@ For ready-made storage classes that combine django-require with Amazon S3, check
 Other projects extending django-require
 ---------------------------------------
 
- - [django-require-license](https://github.com/collab-project/django-require-license) - prepends a license header to compressed file(s) generated with django-require
+- `django-require-license <https://github.com/collab-project/django-require-license>`_ - prepends a license header to compressed file(s) generated with django-require
 
 Tests
 -----
