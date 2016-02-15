@@ -1,6 +1,12 @@
 django-require changelog
 ========================
 
+1.0.10 - 15/02/2016
+-------------------
+
+* Fixing `require_module` templatetag for Django 1.9 (@jordiecometrica, @shelldweller).
+
+
 1.0.9 - 04/01/2016
 ------------------
 
