@@ -27,6 +27,24 @@ TEMPLATE_DEBUG = True
 ALLOWED_HOSTS = []
 
 
+# https://docs.djangoproject.com/en/1.9/ref/settings/#templates
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+
 # Application definition
 
 INSTALLED_APPS = (

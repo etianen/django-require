@@ -7,10 +7,9 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.conf import settings
+from django.template import Context, Template
 
 from require.conf import settings as require_settings
-from require.templatetags.require import require_module
-
 
 WORKING_DIR = tempfile.mkdtemp()
 OUTPUT_DIR = tempfile.mkdtemp()
@@ -60,16 +59,19 @@ class RequireInitTest(WorkingDirMixin, TestCase):
 @override_settings(REQUIRE_JS="require.js", REQUIRE_BASE_URL="js")
 class RequireModuleTest(TestCase):
 
+    def renderTemplate(self):
+        return Template("{% load require %}{% require_module 'main' %}").render(Context({}))
+
     @override_settings(REQUIRE_STANDALONE_MODULES={})
     def testRequireModule(self):
-        self.assertHTMLEqual(require_module("main"), """<script src="{0}" data-main="{1}"></script>""".format(
+        self.assertHTMLEqual(self.renderTemplate(), """<script src="{0}" data-main="{1}"></script>""".format(
             staticfiles_storage.url("js/require.js"),
             staticfiles_storage.url("js/main.js"),
         ))
 
     @override_settings(REQUIRE_DEBUG=False, REQUIRE_STANDALONE_MODULES={"main": {"out": "main-built.js"}})
     def testStandaloneRequireModule(self):
-        self.assertHTMLEqual(require_module("main"), """<script src="{0}"></script>""".format(
+        self.assertHTMLEqual(self.renderTemplate(), """<script src="{0}"></script>""".format(
             staticfiles_storage.url("js/main-built.js"),
         ))
 
