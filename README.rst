@@ -9,7 +9,7 @@ Features
 
 -  Optimize your static assets using the excellent r.js optimizer.
 -  Compile standalone modules using the
-   `almond.js <https://github.com/jrburke/almond>`_ shim.
+   `almond.js <https://github.com/requirejs/almond>`_ shim.
 -  Compatible with any Django staticfiles storage backend.
 
 Installation
@@ -137,7 +137,7 @@ Building standalone modules
 As a further optimization to your code, you can build your modules to
 run independently of require.js, which can often speed up page load
 times. Standalone modules are built using the almond.js shim, so consult
-the `almond.js <https://github.com/jrburke/almond>`_ documentation to
+the `almond.js <https://github.com/requirejs/almond>`_ documentation to
 make sure that it's safe to build your module in standalone mode.
 
 To specify standalone modules, simply add them to your
