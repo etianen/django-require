@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import os.path, shutil
-from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
@@ -17,33 +16,32 @@ def default_staticfiles_dir():
 
 
 class Command(BaseCommand):
-    
+
     help = (
         "Copies the base require.js file into your STATICFILES_DIRS.\n\n"
         "Also copies default implementations of any build profiles listed in the REQUIRE_BUILD_PROFILE "
         "and REQUIRE_STANDALONE_MODULES settings."
     )
-    
-    option_list = BaseCommand.option_list + (
-        make_option(
+
+    requires_model_validation = False
+
+    def add_arguments(self, parser):
+        parser.add_argument(
             "-f",
             "--force",
             action = "store_true",
             dest = "force",
             default = False,
-            help = "Overwrite existing files if found.", 
-        ),
-        make_option(
+            help = "Overwrite existing files if found."
+        )
+        parser.add_argument(
             "-d",
             "--dir",
             action = "store",
             dest = "dir",
-            help = "Copy files into the named directory. Defaults to the first item in your STATICFILES_DIRS setting.", 
-        ),
-    )
-    
-    requires_model_validation = False
-    
+            help = "Copy files into the named directory. Defaults to the first item in your STATICFILES_DIRS setting."
+        )
+
     def handle(self, **options):
         verbosity = int(options.get("verbosity", 1))
         # Calculate the destination dir.
