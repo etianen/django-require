@@ -1,6 +1,12 @@
 django-require changelog
 ========================
 
+1.0.11 - 22/08/2016
+-------------------
+
+* Django 1.10 compatibility (@thijstriemstra).
+
+
 1.0.10 - 15/02/2016
 -------------------
 
