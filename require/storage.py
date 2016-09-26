@@ -8,6 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import File
 from django.core.files.storage import FileSystemStorage
 from django.contrib.staticfiles.storage import StaticFilesStorage, CachedStaticFilesStorage
+from django.utils.encoding import force_text
 
 from require.conf import settings as require_settings
 from require.helpers import resolve_require_url
@@ -135,7 +136,9 @@ class OptimizedFilesMixin(object):
             compiled_storage = FileSystemStorage(env.build_dir)
             # Walk the compiled directory, checking for modified assets.
             for build_dirpath, _, build_filenames in os.walk(env.build_dir):
+                build_dirpath = force_text(build_dirpath)
                 for build_filename in build_filenames:
+                    build_filename = force_text(build_filename)
                     # Determine asset name.
                     build_filepath = os.path.join(build_dirpath, build_filename)
                     build_name = build_filepath[len(env.build_dir)+1:]
