@@ -17,3 +17,6 @@ env:
   - TOXENV=py35-django-18
   - TOXENV=py35-django-19
   - TOXENV=py35-django-110
+  - TOXENV=py36-django-18
+  - TOXENV=py36-django-19
+  - TOXENV=py36-django-110
